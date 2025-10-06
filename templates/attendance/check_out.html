@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Check Out - Attendance System{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-white">
+                    <h4 class="mb-0">Check Out</h4>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="mb-4 text-center">
+                            <i class="fas fa-sign-out-alt fa-4x text-info mb-3"></i>
+                            <h5>End Your Work Day</h5>
+                            <p class="text-muted">Enter your employee ID to check out</p>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="employee_id" class="form-label">Employee ID</label>
+                            <input type="text" 
+                                   class="form-control form-control-lg" 
+                                   id="employee_id" 
+                                   name="employee_id" 
+                                   placeholder="Enter your employee ID" 
+                                   required
+                                   autofocus>
+                            <div class="form-text">Enter the same ID you used for check-in</div>
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-info btn-lg">
+                                <i class="fas fa-sign-out-alt me-2"></i> Check Out
+                            </button>
+                        </div>
+                    </form>
+
+                    <div class="mt-4 p-3 bg-light rounded">
+                        <h6><i class="fas fa-info-circle me-2"></i>Important Notes:</h6>
+                        <ul class="mb-0 small">
+                            <li>You must have checked in today to check out</li>
+                            <li>Check-out time will be recorded automatically</li>
+                            <li>Working hours will be calculated automatically</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.card {
+    border: none;
+    box-shadow: 0 0 20px rgba(0,0,0,0.1);
+    border-radius: 15px;
+}
+
+.form-control {
+    border-radius: 10px;
+    border: 2px solid #e9ecef;
+    transition: all 0.3s;
+}
+
+.form-control:focus {
+    border-color: #17a2b8;
+    box-shadow: 0 0 0 0.2rem rgba(23, 162, 184, 0.25);
+}
+
+.btn {
+    border-radius: 10px;
+    padding: 12px 24px;
+    font-weight: 600;
+}
+</style>
+{% endblock %}
