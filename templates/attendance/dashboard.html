@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+{% extends 'attendance/base.html' %}
 {% load static %}
 
 {% block title %}Dashboard - Attendance System{% endblock %}
@@ -15,6 +15,54 @@
     <div class="row g-3 mb-4">
         <div class="col-md-3">
             <div class="card stat-card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-subtitle mb-2 opacity-75">Total Employees</h6>
+                            <h2 class="card-title mb-0">{{ total_employees }}</h2>
+                        </div>
+                        <div class="stat-icon">
+                            <i class="fas fa-users fa-2x opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card stat-card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-subtitle mb-2 opacity-75">Present on time</h6>
+                            <h2 class="card-title mb-0">{{ present_count }}</h2>
+                        </div>
+                        <div class="stat-icon">
+                            <i class="fas fa-check-circle fa-2x opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card stat-card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-subtitle mb-2 opacity-75">Late</h6>
+                            <h2 class="card-title mb-0">{{ late_count }}</h2>
+                        </div>
+                        <div class="stat-icon">
+                            <i class="fas fa-clock fa-2x opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card stat-card bg-danger text-white">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
@@ -220,64 +268,4 @@
     background-color: #f8f9fa;
 }
 </style>
-{% endblock %}flex justify-content-between align-items-center">
-                        <div>
-                            <h6 class="card-subtitle mb-2 opacity-75">Total Employees</h6>
-                            <h2 class="card-title mb-0">{{ total_employees }}</h2>
-                        </div>
-                        <div class="stat-icon">
-                            <i class="fas fa-users fa-2x opacity-50"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-3">
-            <div class="card stat-card bg-success text-white">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 class="card-subtitle mb-2 opacity-75">Present on time</h6>
-                            <h2 class="card-title mb-0">{{ present_count }}</h2>
-                        </div>
-                        <div class="stat-icon">
-                            <i class="fas fa-check-circle fa-2x opacity-50"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-3">
-            <div class="card stat-card bg-warning text-white">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 class="card-subtitle mb-2 opacity-75">Late</h6>
-                            <h2 class="card-title mb-0">{{ late_count }}</h2>
-                        </div>
-                        <div class="stat-icon">
-                            <i class="fas fa-clock fa-2x opacity-50"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-3">
-            <div class="card stat-card bg-danger text-white">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 class="card-subtitle mb-2 opacity-75">On Leave</h6>
-                            <h2 class="card-title mb-0">{{ on_leave_count }}</h2>
-                        </div>
-                        <div class="stat-icon">
-                            <i class="fas fa-plane fa-2x opacity-50"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>  
+{% endblock %}
