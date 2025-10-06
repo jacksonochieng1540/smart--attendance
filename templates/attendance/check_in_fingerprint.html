@@ -1,0 +1,226 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Fingerprint Check-in{% endblock %}
+
+{% block extra_css %}
+<style>
+    .fingerprint-scanner {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 50px;
+        border-radius: 15px;
+        text-align: center;
+    }
+
+    .fingerprint-icon {
+        font-size: 8rem;
+        animation: pulse 2s infinite;
+        opacity: 0.8;
+    }
+
+    @keyframes pulse {
+        0%, 100% {
+            transform: scale(1);
+            opacity: 0.8;
+        }
+        50% {
+            transform: scale(1.1);
+            opacity: 1;
+        }
+    }
+
+    .scanner-active .fingerprint-icon {
+        color: #10B981;
+        animation: scan 1.5s infinite;
+    }
+
+    @keyframes scan {
+        0%, 100% {
+            transform: scale(1);
+            filter: brightness(1);
+        }
+        50% {
+            transform: scale(1.05);
+            filter: brightness(1.3);
+        }
+    }
+
+    .employee-input-section {
+        background: white;
+        padding: 30px;
+        border-radius: 10px;
+        box-shadow: 0 0 20px rgba(0,0,0,0.1);
+    }
+
+    .scan-status {
+        margin-top: 20px;
+        padding: 15px;
+        border-radius: 8px;
+        display: none;
+    }
+
+    .scan-status.success {
+        background: #D1FAE5;
+        color: #065F46;
+        display: block;
+    }
+
+    .scan-status.error {
+        background: #FEE2E2;
+        color: #991B1B;
+        display: block;
+    }
+
+    .scan-status.scanning {
+        background: #DBEAFE;
+        color: #1E40AF;
+        display: block;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <h2 class="text-center mb-4">
+                <i class="fas fa-fingerprint"></i> Fingerprint Check-in
+            </h2>
+
+            <div class="employee-input-section mb-4">
+                <form id="fingerprint-form" method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="employee-id" class="form-label">Employee ID</label>
+                        <input type="text" 
+                               class="form-control form-control-lg" 
+                               id="employee-id" 
+                               name="employee_id" 
+                               placeholder="Enter your Employee ID" 
+                               required
+                               autocomplete="off">
+                    </div>
+                    
+                    <input type="hidden" name="fingerprint_data" id="fingerprint-data">
+                    
+                    <button type="button" 
+                            class="btn btn-primary btn-lg w-100" 
+                            id="scan-btn"
+                            onclick="startFingerprintScan()">
+                        <i class="fas fa-fingerprint"></i> Start Fingerprint Scan
+                    </button>
+                </form>
+            </div>
+
+            <div class="fingerprint-scanner" id="scanner">
+                <div class="fingerprint-icon">
+                    <i class="fas fa-fingerprint"></i>
+                </div>
+                <h3 class="mt-4">Place Your Finger</h3>
+                <p>Position your finger on the scanner</p>
+                
+                <div id="scan-status" class="scan-status"></div>
+            </div>
+
+            <div class="text-center mt-4">
+                <a href="{% url 'attendance:dashboard' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let scanningInProgress = false;
+
+    function startFingerprintScan() {
+        const employeeId = document.getElementById('employee-id').value;
+        
+        if (!employeeId) {
+            alert('Please enter your Employee ID first');
+            document.getElementById('employee-id').focus();
+            return;
+        }
+
+        if (scanningInProgress) {
+            return;
+        }
+
+        scanningInProgress = true;
+        const scanner = document.getElementById('scanner');
+        const statusDiv = document.getElementById('scan-status');
+        
+        // Add scanning class
+        scanner.classList.add('scanner-active');
+        statusDiv.className = 'scan-status scanning';
+        statusDiv.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Scanning fingerprint...';
+
+        // Simulate fingerprint scanning
+        // In production, this would interface with actual fingerprint hardware
+        setTimeout(() => {
+            simulateFingerprintCapture();
+        }, 2000);
+    }
+
+    function simulateFingerprintCapture() {
+        const scanner = document.getElementById('scanner');
+        const statusDiv = document.getElementById('scan-status');
+        
+        // Generate simulated fingerprint data
+        // In production, this would be actual biometric data from the scanner
+        const fingerprintData = generateSimulatedFingerprint();
+        
+        // Display success
+        scanner.classList.remove('scanner-active');
+        statusDiv.className = 'scan-status success';
+        statusDiv.innerHTML = '<i class="fas fa-check-circle"></i> Fingerprint captured successfully!';
+        
+        // Set fingerprint data and submit
+        document.getElementById('fingerprint-data').value = fingerprintData;
+        
+        setTimeout(() => {
+            statusDiv.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verifying and checking in...';
+            setTimeout(() => {
+                document.getElementById('fingerprint-form').submit();
+            }, 1000);
+        }, 1500);
+    }
+
+    function generateSimulatedFingerprint() {
+        // Simulate fingerprint template data
+        // In production, this would be actual biometric template
+        const timestamp = new Date().getTime();
+        const randomData = Math.random().toString(36).substring(2);
+        return `FP_${timestamp}_${randomData}`;
+    }
+
+    // Handle form submission
+    document.getElementById('fingerprint-form').addEventListener('submit', function(e) {
+        const fingerprintData = document.getElementById('fingerprint-data').value;
+        if (!fingerprintData) {
+            e.preventDefault();
+            alert('Please scan your fingerprint first');
+        }
+    });
+
+    // Enable Enter key to start scan
+    document.getElementById('employee-id').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            startFingerprintScan();
+        }
+    });
+</script>
+
+{% endblock %}
+    </script>
+</body>
+</html>
+        qrbox: 250,
+        aspectRatio: 1.0,
+        formatsToSupport: [ Html5QrcodeSupportedFormats.QR_CODE ]
+    };  

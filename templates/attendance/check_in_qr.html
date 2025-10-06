@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}QR Code Check-in{% endblock %}
+
+{% block extra_css %}
+<style>
+    #qr-reader {
+        width: 100%;
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    #qr-reader__camera {
+        border-radius: 10px;
+        overflow: hidden;
+    }
+
+    .scan-instruction {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 30px;
+        border-radius: 10px;
+        text-align: center;
+        margin-bottom: 30px;
+    }
+
+    .scan-result {
+        display: none;
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        margin-top: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="scan-instruction">
+                <i class="fas fa-qrcode fa-4x mb-3"></i>
+                <h2>QR Code Check-in</h2>
+                <p class="mb-0">Position your QR code within the frame to scan</p>
+            </div>
+
+            <div class="card">
+                <div class="card-body p-4">
+                    <div id="qr-reader"></div>
+                    
+                    <div id="scan-result" class="scan-result">
+                        <div class="text-center">
+                            <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                            <h4>QR Code Scanned!</h4>
+                            <p class="text-muted">Processing your check-in...</p>
+                        </div>
+                    </div>
+
+                    <form id="check-in-form" method="post" style="display: none;">
+                        {% csrf_token %}
+                        <input type="hidden" name="qr_data" id="qr-data-input">
+                    </form>
+                </div>
+            </div>
+
+            <div class="text-center mt-4">
+                <a href="{% url 'attendance:dashboard' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- HTML5 QR Code Scanner -->
+<script src="https://unpkg.com/html5-qrcode"></script>
+
+<script>
+    let html5QrCode;
+    
+    function onScanSuccess(decodedText, decodedResult) {
+        // Show success message
+        document.getElementById('scan-result').style.display = 'block';
+        
+        // Stop scanning
+        html5QrCode.stop().then(() => {
+            // Submit form with QR data
+            document.getElementById('qr-data-input').value = decodedText;
+            document.getElementById('check-in-form').submit();
+        });
+    }
+    
+    function onScanFailure(error) {
+        // Handle scan failure silently
+        console.warn(`QR scan error: ${error}`);
+    }
+    
+    // Initialize QR Code Scanner
+    html5QrCode = new Html5Qrcode("qr-reader");
+    
+    const config = {
+        fps: 10,
+        qrbox: { width: 250, height: 250 }
+    };
+    
+    html5QrCode.start(
+        { facingMode: "environment" },
+        config,
+        onScanSuccess,
+        onScanFailure
+    ).catch(err => {
+        console.error("Camera error:", err);
+        alert("Unable to access camera. Please check permissions.");
+    });
+</script>
+{% endblock %}

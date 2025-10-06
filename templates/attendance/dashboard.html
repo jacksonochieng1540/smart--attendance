@@ -1,0 +1,283 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Dashboard - Attendance System{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">Attendance Dashboard</h2>
+        <div class="text-muted">{{ today|date:"l, F d, Y" }}</div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card stat-card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-subtitle mb-2 opacity-75">Absent</h6>
+                            <h2 class="card-title mb-0">{{ absent_count }}</h2>
+                        </div>
+                        <div class="stat-icon">
+                            <i class="fas fa-user-times fa-2x opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-qrcode fa-3x text-primary mb-3"></i>
+                    <h5>QR Code Check-in</h5>
+                    <p class="text-muted">Scan QR code to check in</p>
+                    <a href="{% url 'attendance:check_in_qr' %}" class="btn btn-primary">
+                        <i class="fas fa-camera"></i> Scan QR Code
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-fingerprint fa-3x text-success mb-3"></i>
+                    <h5>Fingerprint Check-in</h5>
+                    <p class="text-muted">Use fingerprint to check in</p>
+                    <a href="{% url 'attendance:check_in_fingerprint' %}" class="btn btn-success">
+                        <i class="fas fa-fingerprint"></i> Scan Fingerprint
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-sign-out-alt fa-3x text-info mb-3"></i>
+                    <h5>Check-out</h5>
+                    <p class="text-muted">End your work day</p>
+                    <a href="{% url 'attendance:check_out' %}" class="btn btn-info">
+                        <i class="fas fa-sign-out-alt"></i> Check Out
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        <!-- Today's Attendance -->
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header bg-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Today's Attendance Records</h5>
+                        <span class="badge bg-info">Average Hours: {{ avg_hours }}h</span>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Employee</th>
+                                    <th>Department</th>
+                                    <th>Check In</th>
+                                    <th>Check Out</th>
+                                    <th>Hours</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for record in recent_records %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <img src="{% if record.employee.user.profile_image %}{{ record.employee.user.profile_image.url }}{% else %}{% static 'img/default-avatar.png' %}{% endif %}" 
+                                                 class="rounded-circle me-2" 
+                                                 width="32" height="32" 
+                                                 alt="{{ record.employee.user.get_full_name }}">
+                                            <div>
+                                                <div class="fw-semibold">{{ record.employee.user.get_full_name }}</div>
+                                                <small class="text-muted">{{ record.employee.user.employee_id }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>{{ record.employee.department.name|default:"N/A" }}</td>
+                                    <td>
+                                        {% if record.check_in %}
+                                            <span class="text-success">{{ record.check_in|time:"H:i" }}</span>
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if record.check_out %}
+                                            <span class="text-danger">{{ record.check_out|time:"H:i" }}</span>
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if record.working_hours %}
+                                            {{ record.working_hours }}h
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if record.status == 'present' %}
+                                            <span class="badge bg-success">Present on time</span>
+                                        {% elif record.status == 'late' %}
+                                            <span class="badge bg-warning">Late</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">Absent</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="6" class="text-center py-4 text-muted">
+                                        No attendance records for today
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="card-footer bg-white">
+                    <a href="{% url 'attendance:records' %}" class="btn btn-sm btn-outline-primary">
+                        View All Records <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Absent Employees -->
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Absent Employees</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush" style="max-height: 500px; overflow-y: auto;">
+                        {% for employee in absent_employees %}
+                        <div class="list-group-item">
+                            <div class="d-flex align-items-center">
+                                <img src="{% if employee.user.profile_image %}{{ employee.user.profile_image.url }}{% else %}{% static 'img/default-avatar.png' %}{% endif %}" 
+                                     class="rounded-circle me-2" 
+                                     width="40" height="40" 
+                                     alt="{{ employee.user.get_full_name }}">
+                                <div class="flex-grow-1">
+                                    <div class="fw-semibold">{{ employee.user.get_full_name }}</div>
+                                    <small class="text-muted">{{ employee.department.name|default:"N/A" }}</small>
+                                </div>
+                                <span class="badge bg-danger">Absent</span>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="list-group-item text-center text-muted">
+                            All employees present today!
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.stat-card {
+    border: none;
+    border-radius: 10px;
+    transition: transform 0.2s;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+}
+
+.stat-icon {
+    font-size: 3rem;
+}
+
+.card {
+    border: none;
+    box-shadow: 0 0 20px rgba(0,0,0,0.1);
+    border-radius: 10px;
+}
+
+.table-hover tbody tr:hover {
+    background-color: #f8f9fa;
+}
+</style>
+{% endblock %}flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-subtitle mb-2 opacity-75">Total Employees</h6>
+                            <h2 class="card-title mb-0">{{ total_employees }}</h2>
+                        </div>
+                        <div class="stat-icon">
+                            <i class="fas fa-users fa-2x opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card stat-card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-subtitle mb-2 opacity-75">Present on time</h6>
+                            <h2 class="card-title mb-0">{{ present_count }}</h2>
+                        </div>
+                        <div class="stat-icon">
+                            <i class="fas fa-check-circle fa-2x opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card stat-card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-subtitle mb-2 opacity-75">Late</h6>
+                            <h2 class="card-title mb-0">{{ late_count }}</h2>
+                        </div>
+                        <div class="stat-icon">
+                            <i class="fas fa-clock fa-2x opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card stat-card bg-danger text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-subtitle mb-2 opacity-75">On Leave</h6>
+                            <h2 class="card-title mb-0">{{ on_leave_count }}</h2>
+                        </div>
+                        <div class="stat-icon">
+                            <i class="fas fa-plane fa-2x opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>  
