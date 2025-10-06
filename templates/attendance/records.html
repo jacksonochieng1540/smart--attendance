@@ -1,0 +1,235 @@
+{% extends 'attendance/base.html' %}
+{% load static %}
+
+{% block title %}Attendance Records{% endblock %}
+
+{% block extra_css %}
+<style>
+    .filter-card {
+        background: white;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        margin-bottom: 20px;
+    }
+
+    .status-badge {
+        padding: 5px 15px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 500;
+    }
+
+    .verification-badge {
+        padding: 3px 10px;
+        border-radius: 15px;
+        font-size: 0.75rem;
+    }
+
+    .export-btn {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">Attendance Records</h2>
+        <div>
+            <button class="btn btn-success export-btn" onclick="exportToExcel()">
+                <i class="fas fa-file-excel"></i> Export to Excel
+            </button>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filter-card">
+        <form method="get" class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label">Date</label>
+                <input type="date" 
+                       name="date" 
+                       class="form-control" 
+                       value="{{ selected_date|date:'Y-m-d' }}">
+            </div>
+            
+            <div class="col-md-3">
+                <label class="form-label">Status</label>
+                <select name="status" class="form-select">
+                    <option value="all" {% if selected_status == 'all' %}selected{% endif %}>All Status</option>
+                    <option value="present" {% if selected_status == 'present' %}selected{% endif %}>Present on time</option>
+                    <option value="late" {% if selected_status == 'late' %}selected{% endif %}>Late</option>
+                    <option value="absent" {% if selected_status == 'absent' %}selected{% endif %}>Absent</option>
+                </select>
+            </div>
+            
+            <div class="col-md-3">
+                <label class="form-label">Department</label>
+                <select name="department" class="form-select">
+                    <option value="all" {% if selected_department == 'all' %}selected{% endif %}>All Departments</option>
+                    {% for dept in departments %}
+                    <option value="{{ dept.id }}" {% if selected_department == dept.id|stringformat:"s" %}selected{% endif %}>
+                        {{ dept.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="col-md-3 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="fas fa-filter"></i> Filter
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Records Table -->
+    <div class="card">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0" id="attendance-table">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Employee</th>
+                            <th>Employee ID</th>
+                            <th>Department</th>
+                            <th>Date</th>
+                            <th>Check In</th>
+                            <th>Check Out</th>
+                            <th>Working Hours</th>
+                            <th>Verification</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for record in records %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <img src="{% if record.employee.user.profile_image %}{{ record.employee.user.profile_image.url }}{% else %}{% static 'img/default-avatar.png' %}{% endif %}" 
+                                         class="rounded-circle me-2" 
+                                         width="35" 
+                                         height="35" 
+                                         alt="{{ record.employee.user.get_full_name }}">
+                                    <span class="fw-semibold">{{ record.employee.user.get_full_name }}</span>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge bg-secondary">{{ record.employee.user.employee_id }}</span>
+                            </td>
+                            <td>{{ record.employee.department.name|default:"N/A" }}</td>
+                            <td>{{ record.date|date:"M d, Y" }}</td>
+                            <td>
+                                {% if record.check_in %}
+                                    <span class="text-success fw-semibold">
+                                        <i class="fas fa-sign-in-alt"></i> {{ record.check_in|time:"h:i A" }}
+                                    </span>
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if record.check_out %}
+                                    <span class="text-danger fw-semibold">
+                                        <i class="fas fa-sign-out-alt"></i> {{ record.check_out|time:"h:i A" }}
+                                    </span>
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if record.working_hours %}
+                                    <span class="badge bg-info">{{ record.working_hours }}h</span>
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if record.verification_method == 'qr' %}
+                                    <span class="verification-badge bg-primary text-white">
+                                        <i class="fas fa-qrcode"></i> QR
+                                    </span>
+                                {% elif record.verification_method == 'fingerprint' %}
+                                    <span class="verification-badge bg-success text-white">
+                                        <i class="fas fa-fingerprint"></i> Fingerprint
+                                    </span>
+                                {% else %}
+                                    <span class="verification-badge bg-secondary text-white">
+                                        <i class="fas fa-user"></i> Manual
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if record.status == 'present' %}
+                                    <span class="status-badge bg-success text-white">
+                                        <i class="fas fa-check"></i> Present on time
+                                    </span>
+                                {% elif record.status == 'late' %}
+                                    <span class="status-badge bg-warning text-dark">
+                                        <i class="fas fa-clock"></i> Late
+                                    </span>
+                                {% else %}
+                                    <span class="status-badge bg-danger text-white">
+                                        <i class="fas fa-times"></i> Absent
+                                    </span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="9" class="text-center py-5 text-muted">
+                                <i class="fas fa-inbox fa-3x mb-3 d-block"></i>
+                                No attendance records found
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function exportToExcel() {
+        // Get table
+        const table = document.getElementById('attendance-table');
+        
+        // Convert table to CSV
+        let csv = [];
+        const rows = table.querySelectorAll('tr');
+        
+        for (let i = 0; i < rows.length; i++) {
+            const row = [];
+            const cols = rows[i].querySelectorAll('td, th');
+            
+            for (let j = 0; j < cols.length; j++) {
+                let data = cols[j].innerText.replace(/(\r\n|\n|\r)/gm, '').trim();
+                data = data.replace(/"/g, '""');
+                row.push('"' + data + '"');
+            }
+            
+            csv.push(row.join(','));
+        }
+        
+        // Create download
+        const csvContent = csv.join('\n');
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        
+        link.setAttribute('href', url);
+        link.setAttribute('download', 'attendance_records_{{ selected_date|date:"Y-m-d" }}.csv');
+        link.style.visibility = 'hidden';
+        
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+</script>
+{% endblock %}
