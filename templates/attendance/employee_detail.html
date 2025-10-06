@@ -1,0 +1,203 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ employee.user.get_full_name }} - Employee Details{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="d-flex align-items-center">
+            <a href="{% url 'attendance:employee_list' %}" class="btn btn-outline-secondary me-3">
+                <i class="fas fa-arrow-left"></i>
+            </a>
+            <div>
+                <h2 class="mb-0">Employee Details</h2>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-0">
+                        <li class="breadcrumb-item"><a href="{% url 'attendance:dashboard' %}">Dashboard</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'attendance:employee_list' %}">Employees</a></li>
+                        <li class="breadcrumb-item active">{{ employee.user.get_full_name }}</li>
+                    </ol>
+                </nav>
+            </div>
+        </div>
+        <div>
+            <a href="{% url 'attendance:enroll_fingerprint' employee.id %}" class="btn btn-success">
+                <i class="fas fa-fingerprint me-2"></i>Enroll Fingerprint
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Employee Information -->
+        <div class="col-lg-4 mb-4">
+            <div class="card">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Employee Information</h5>
+                </div>
+                <div class="card-body text-center">
+                    <img src="{% if employee.user.profile_image %}{{ employee.user.profile_image.url }}{% else %}{% static 'img/default-avatar.png' %}{% endif %}" 
+                         class="rounded-circle mb-3" 
+                         width="120" height="120" 
+                         alt="{{ employee.user.get_full_name }}">
+                    
+                    <h4>{{ employee.user.get_full_name }}</h4>
+                    <p class="text-muted">{{ employee.user.employee_id }}</p>
+                    
+                    <div class="row text-start mt-4">
+                        <div class="col-12 mb-2">
+                            <strong><i class="fas fa-envelope me-2 text-primary"></i>Email:</strong>
+                            <p class="mb-0">{{ employee.user.email }}</p>
+                        </div>
+                        <div class="col-12 mb-2">
+                            <strong><i class="fas fa-building me-2 text-primary"></i>Department:</strong>
+                            <p class="mb-0">{{ employee.department.name|default:"Not assigned" }}</p>
+                        </div>
+                        <div class="col-12 mb-2">
+                            <strong><i class="fas fa-phone me-2 text-primary"></i>Phone:</strong>
+                            <p class="mb-0">{{ employee.phone|default:"Not provided" }}</p>
+                        </div>
+                        <div class="col-12 mb-2">
+                            <strong><i class="fas fa-map-marker-alt me-2 text-primary"></i>Address:</strong>
+                            <p class="mb-0">{{ employee.address|default:"Not provided"|linebreaks }}</p>
+                        </div>
+                        <div class="col-12">
+                            <strong><i class="fas fa-fingerprint me-2 text-primary"></i>Fingerprint:</strong>
+                            <p class="mb-0">
+                                {% if employee.fingerprint_enrolled %}
+                                    <span class="badge bg-success">Enrolled</span>
+                                {% else %}
+                                    <span class="badge bg-warning">Not Enrolled</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics & Attendance History -->
+        <div class="col-lg-8">
+            <!-- Statistics -->
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <div class="card stat-card bg-primary text-white">
+                        <div class="card-body text-center">
+                            <h2 class="card-title">{{ total_days }}</h2>
+                            <p class="mb-0">Total Days</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card stat-card bg-success text-white">
+                        <div class="card-body text-center">
+                            <h2 class="card-title">{{ present_days }}</h2>
+                            <p class="mb-0">Present Days</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card stat-card bg-warning text-white">
+                        <div class="card-body text-center">
+                            <h2 class="card-title">{{ late_days }}</h2>
+                            <p class="mb-0">Late Days</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Attendance History -->
+            <div class="card">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Recent Attendance (Last 30 Days)</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Check In</th>
+                                    <th>Check Out</th>
+                                    <th>Hours</th>
+                                    <th>Status</th>
+                                    <th>Method</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for record in attendance_history %}
+                                <tr>
+                                    <td>{{ record.date|date:"M d, Y" }}</td>
+                                    <td>
+                                        {% if record.check_in %}
+                                            <span class="text-success">{{ record.check_in|time:"H:i" }}</span>
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if record.check_out %}
+                                            <span class="text-danger">{{ record.check_out|time:"H:i" }}</span>
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if record.working_hours %}
+                                            {{ record.working_hours }}h
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if record.status == 'present' %}
+                                            <span class="badge bg-success">Present</span>
+                                        {% elif record.status == 'late' %}
+                                            <span class="badge bg-warning">Late</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">Absent</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">{{ record.verification_method|title }}</span>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="6" class="text-center py-4 text-muted">
+                                        No attendance records found
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.stat-card {
+    border: none;
+    border-radius: 10px;
+    transition: transform 0.2s;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+}
+
+.card {
+    border: none;
+    box-shadow: 0 0 20px rgba(0,0,0,0.1);
+    border-radius: 10px;
+}
+
+.table-hover tbody tr:hover {
+    background-color: #f8f9fa;
+}
+</style>
+{% endblock %}

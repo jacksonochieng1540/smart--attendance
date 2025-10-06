@@ -1,0 +1,347 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Reports - Attendance System{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">Attendance Reports</h2>
+        <div class="text-muted">
+            {{ start_date }} to {{ end_date }}
+        </div>
+    </div>
+
+    <!-- Date Range Filter -->
+    <div class="card mb-4">
+        <div class="card-header bg-white">
+            <h5 class="mb-0">Report Filters</h5>
+        </div>
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-4">
+                    <label for="start_date" class="form-label">Start Date</label>
+                    <input type="date" 
+                           name="start_date" 
+                           class="form-control" 
+                           id="start_date" 
+                           value="{{ start_date }}"
+                           required>
+                </div>
+                <div class="col-md-4">
+                    <label for="end_date" class="form-label">End Date</label>
+                    <input type="date" 
+                           name="end_date" 
+                           class="form-control" 
+                           id="end_date" 
+                           value="{{ end_date }}"
+                           required>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label d-block">&nbsp;</label>
+                    <div class="d-grid gap-2 d-md-flex">
+                        <button type="submit" class="btn btn-primary flex-fill">
+                            <i class="fas fa-chart-bar me-2"></i>Generate Report
+                        </button>
+                        <button type="button" class="btn btn-success" onclick="exportReport()">
+                            <i class="fas fa-download me-2"></i>Export
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Summary Statistics -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card stat-card bg-primary text-white">
+                <div class="card-body text-center">
+                    <h2 class="card-title">{{ total_records }}</h2>
+                    <p class="mb-0">Total Records</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stat-card bg-success text-white">
+                <div class="card-body text-center">
+                    <h2 class="card-title">{{ present_count }}</h2>
+                    <p class="mb-0">Present</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stat-card bg-warning text-white">
+                <div class="card-body text-center">
+                    <h2 class="card-title">{{ late_count }}</h2>
+                    <p class="mb-0">Late</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stat-card bg-danger text-white">
+                <div class="card-body text-center">
+                    <h2 class="card-title">{{ absent_count }}</h2>
+                    <p class="mb-0">Absent</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Department Statistics -->
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Department-wise Statistics</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Department</th>
+                                    <th>Total</th>
+                                    <th>Present</th>
+                                    <th>Late</th>
+                                    <th>Rate</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for stat in dept_stats %}
+                                <tr>
+                                    <td class="fw-semibold">{{ stat.employee__department__name|default:"No Department" }}</td>
+                                    <td>{{ stat.total }}</td>
+                                    <td class="text-success">{{ stat.present }}</td>
+                                    <td class="text-warning">{{ stat.late }}</td>
+                                    <td>
+                                        {% if stat.total > 0 %}
+                                            {% widthratio stat.present stat.total 100 %}%
+                                        {% else %}
+                                            0%
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center py-4 text-muted">
+                                        No department statistics available
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Status Distribution -->
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Attendance Distribution</h5>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container" style="position: relative; height: 250px;">
+                        <canvas id="attendanceChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detailed Records -->
+    <div class="card">
+        <div class="card-header bg-white">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Detailed Records</h5>
+                <span class="badge bg-primary">{{ records.count }} records</span>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Employee</th>
+                            <th>Department</th>
+                            <th>Date</th>
+                            <th>Check In</th>
+                            <th>Check Out</th>
+                            <th>Hours</th>
+                            <th>Status</th>
+                            <th>Method</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for record in records %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <img src="{% if record.employee.user.profile_image %}{{ record.employee.user.profile_image.url }}{% else %}{% static 'img/default-avatar.png' %}{% endif %}" 
+                                         class="rounded-circle me-2" 
+                                         width="32" height="32" 
+                                         alt="{{ record.employee.user.get_full_name }}">
+                                    <div>
+                                        <div class="fw-semibold">{{ record.employee.user.get_full_name }}</div>
+                                        <small class="text-muted">{{ record.employee.user.employee_id }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>{{ record.employee.department.name|default:"N/A" }}</td>
+                            <td>{{ record.date|date:"M d, Y" }}</td>
+                            <td>
+                                {% if record.check_in %}
+                                    <span class="text-success">{{ record.check_in|time:"H:i" }}</span>
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if record.check_out %}
+                                    <span class="text-danger">{{ record.check_out|time:"H:i" }}</span>
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if record.working_hours %}
+                                    <span class="fw-semibold">{{ record.working_hours }}h</span>
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if record.status == 'present' %}
+                                    <span class="badge bg-success">Present</span>
+                                {% elif record.status == 'late' %}
+                                    <span class="badge bg-warning">Late</span>
+                                {% else %}
+                                    <span class="badge bg-danger">Absent</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge bg-info">{{ record.verification_method|title }}</span>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="8" class="text-center py-4 text-muted">
+                                <i class="fas fa-chart-bar fa-2x mb-3"></i>
+                                <h5>No records in selected period</h5>
+                                <p>Try adjusting your date range.</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.stat-card {
+    border: none;
+    border-radius: 10px;
+    transition: transform 0.2s;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+}
+
+.card {
+    border: none;
+    box-shadow: 0 0 20px rgba(0,0,0,0.1);
+    border-radius: 10px;
+}
+
+.table-hover tbody tr:hover {
+    background-color: #f8f9fa;
+}
+
+.form-control {
+    border-radius: 8px;
+}
+</style>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Set default dates if not set
+    const startDate = document.getElementById('start_date');
+    const endDate = document.getElementById('end_date');
+    
+    if (!startDate.value) {
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        startDate.value = thirtyDaysAgo.toISOString().split('T')[0];
+    }
+    
+    if (!endDate.value) {
+        endDate.value = new Date().toISOString().split('T')[0];
+    }
+
+    // Initialize chart
+    const ctx = document.getElementById('attendanceChart').getContext('2d');
+    const attendanceChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Present', 'Late', 'Absent'],
+            datasets: [{
+                data: [{{ present_count }}, {{ late_count }}, {{ absent_count }}],
+                backgroundColor: [
+                    '#10B981',
+                    '#F59E0B', 
+                    '#EF4444'
+                ],
+                borderWidth: 2,
+                borderColor: '#fff'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        padding: 20,
+                        usePointStyle: true
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const label = context.label || '';
+                            const value = context.raw || 0;
+                            const total = {{ total_records }};
+                            const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                            return `${label}: ${value} (${percentage}%)`;
+                        }
+                    }
+                }
+            }
+        }
+    });
+});
+
+function exportReport() {
+    // In a real implementation, this would generate and download a PDF/Excel report
+    alert('Export functionality would be implemented here. This would generate a PDF or Excel report.');
+    
+    // Example implementation:
+    // const params = new URLSearchParams({
+    //     start_date: '{{ start_date }}',
+    //     end_date: '{{ end_date }}',
+    //     format: 'pdf'
+    // });
+    // window.open(`/reports/export/?${params}`, '_blank');
+}
+</script>
+{% endblock %}
