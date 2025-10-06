@@ -1,0 +1,227 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Employees{% endblock %}
+
+{% block extra_css %}
+<style>
+    .employee-card {
+        transition: transform 0.2s, box-shadow 0.2s;
+        cursor: pointer;
+        height: 100%;
+    }
+
+    .employee-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 5px 30px rgba(0,0,0,0.15);
+    }
+
+    .employee-avatar-lg {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid #fff;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    .qr-code-preview {
+        width: 60px;
+        height: 60px;
+        object-fit: contain;
+        border: 1px solid #e5e7eb;
+        border-radius: 5px;
+        padding: 5px;
+    }
+
+    .search-box {
+        background: white;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        margin-bottom: 30px;
+    }
+
+    .fingerprint-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 4px 12px;
+        border-radius: 15px;
+        font-size: 0.85rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">Employee Management</h2>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addEmployeeModal">
+            <i class="fas fa-plus"></i> Add New Employee
+        </button>
+    </div>
+
+    <!-- Search Box -->
+    <div class="search-box">
+        <form method="get" class="row g-3">
+            <div class="col-md-10">
+                <input type="text" 
+                       name="search" 
+                       class="form-control form-control-lg" 
+                       placeholder="Search by name or employee ID..." 
+                       value="{{ search }}">
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary btn-lg w-100">
+                    <i class="fas fa-search"></i> Search
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Employee Cards -->
+    <div class="row g-4">
+        {% for employee in employees %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card employee-card" onclick="window.location.href='{% url 'attendance:employee_detail' employee.pk %}'">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <img src="{% if employee.user.profile_image %}{{ employee.user.profile_image.url }}{% else %}{% static 'img/default-avatar.png' %}{% endif %}" 
+                             class="employee-avatar-lg" 
+                             alt="{{ employee.user.get_full_name }}">
+                        
+                        {% if employee.qr_code %}
+                        <img src="{{ employee.qr_code.url }}" 
+                             class="qr-code-preview" 
+                             alt="QR Code"
+                             title="Employee QR Code">
+                        {% endif %}
+                    </div>
+                    
+                    <h5 class="card-title mb-1">{{ employee.user.get_full_name }}</h5>
+                    <p class="text-muted mb-2">{{ employee.position }}</p>
+                    
+                    <div class="mb-3">
+                        <span class="badge bg-secondary">{{ employee.user.employee_id }}</span>
+                        {% if employee.department %}
+                        <span class="badge bg-info">{{ employee.department.name }}</span>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            {% if employee.fingerprint_enrolled %}
+                                <span class="fingerprint-status bg-success text-white">
+                                    <i class="fas fa-fingerprint"></i> Enrolled
+                                </span>
+                            {% else %}
+                                <span class="fingerprint-status bg-warning text-dark">
+                                    <i class="fas fa-exclamation-triangle"></i> Not Enrolled
+                                </span>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="dropdown" onclick="event.stopPropagation()">
+                            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" 
+                                    type="button" 
+                                    data-bs-toggle="dropdown">
+                                <i class="fas fa-ellipsis-v"></i>
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'attendance:employee_detail' employee.pk %}">
+                                        <i class="fas fa-eye"></i> View Details
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'attendance:enroll_fingerprint' employee.pk %}">
+                                        <i class="fas fa-fingerprint"></i> Enroll Fingerprint
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <a class="dropdown-item text-danger" href="#">
+                                        <i class="fas fa-trash"></i> Deactivate
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card-footer bg-light">
+                    <small class="text-muted">
+                        <i class="fas fa-calendar"></i> Joined: {{ employee.date_joined|date:"M d, Y" }}
+                    </small>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="text-center py-5">
+                <i class="fas fa-users fa-4x text-muted mb-3"></i>
+                <h4 class="text-muted">No employees found</h4>
+                <p class="text-muted">Try adjusting your search or add new employees</p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Add Employee Modal -->
+<div class="modal fade" id="addEmployeeModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-user-plus"></i> Add New Employee
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form method="post" id="add-employee-form">
+                    {% csrf_token %}
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">First Name</label>
+                            <input type="text" name="first_name" class="form-control" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Last Name</label>
+                            <input type="text" name="last_name" class="form-control" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Email</label>
+                            <input type="email" name="email" class="form-control" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Username</label>
+                            <input type="text" name="username" class="form-control" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Department</label>
+                            <select name="department" class="form-select" required>
+                                <option value="">Select Department</option>
+                                {% for dept in departments %}
+                                <option value="{{ dept.id }}">{{ dept.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Position</label>
+                            <input type="text" name="position" class="form-control" required>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" form="add-employee-form" class="btn btn-primary">
+                    <i class="fas fa-save"></i> Save Employee
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
