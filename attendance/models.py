@@ -14,7 +14,7 @@ class User(AbstractUser):
     )
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='employee')
     employee_id = models.CharField(max_length=50, unique=True, null=True, blank=True)
-    phone = models.CharField(max_length=15, blank=True)
+    phone = models.CharField(max_length=15, blank=True, null=True)
     profile_image = models.ImageField(upload_to='profiles/', null=True, blank=True)
     
     def save(self, *args, **kwargs):
@@ -24,7 +24,7 @@ class User(AbstractUser):
 
 class Department(models.Model):
     name = models.CharField(max_length=100)
-    description = models.TextField(blank=True)
+    description = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     
     def __str__(self):
@@ -32,10 +32,10 @@ class Department(models.Model):
 
 class Employee(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='employee_profile')
-    department = models.ForeignKey(Department, on_delete=models.SET_NULL, null=True)
-    position = models.CharField(max_length=100)
+    department = models.ForeignKey(Department, on_delete=models.SET_NULL, null=True, blank=True)
+    position = models.CharField(max_length=100, blank=True, null=True)
     qr_code = models.ImageField(upload_to='qr_codes/', blank=True, null=True)
-    qr_code_data = models.CharField(max_length=255, unique=True, blank=True)
+    qr_code_data = models.CharField(max_length=255, unique=True, blank=True, null=True)
     fingerprint_data = models.TextField(blank=True, null=True) 
     fingerprint_enrolled = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
@@ -81,10 +81,10 @@ class AttendanceRecord(models.Model):
     date = models.DateField(default=timezone.now)
     check_in = models.TimeField(null=True, blank=True)
     check_out = models.TimeField(null=True, blank=True)
-    verification_method = models.CharField(max_length=20, choices=VERIFICATION_CHOICES)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='present')
+    verification_method = models.CharField(max_length=20, choices=VERIFICATION_CHOICES, blank=True, null=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='present', blank=True, null=True)
     working_hours = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
-    notes = models.TextField(blank=True)
+    notes = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
@@ -136,11 +136,11 @@ class LeaveRequest(models.Model):
     )
     
     employee = models.ForeignKey(Employee, on_delete=models.CASCADE, related_name='leave_requests')
-    leave_type = models.CharField(max_length=20, choices=LEAVE_TYPES)
-    start_date = models.DateField()
-    end_date = models.DateField()
-    reason = models.TextField()
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    leave_type = models.CharField(max_length=20, choices=LEAVE_TYPES, blank=True, null=True)
+    start_date = models.DateField(blank=True, null=True)
+    end_date = models.DateField(blank=True, null=True)
+    reason = models.TextField(blank=True, null=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending', blank=True, null=True)
     approved_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='approved_leaves')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -149,12 +149,12 @@ class LeaveRequest(models.Model):
         return f"{self.employee.user.get_full_name()} - {self.leave_type} ({self.start_date})"
 
 class AttendanceSettings(models.Model):
-    expected_check_in_time = models.TimeField(default="09:00")
-    expected_check_out_time = models.TimeField(default="17:00")
-    grace_period_minutes = models.IntegerField(default=15)
-    require_fingerprint = models.BooleanField(default=True)
-    require_qr_code = models.BooleanField(default=True)
-    allow_manual_entry = models.BooleanField(default=False)
+    expected_check_in_time = models.TimeField(default="09:00", blank=True, null=True)
+    expected_check_out_time = models.TimeField(default="17:00", blank=True, null=True)
+    grace_period_minutes = models.IntegerField(default=15, blank=True, null=True)
+    require_fingerprint = models.BooleanField(default=True, blank=True, null=True)
+    require_qr_code = models.BooleanField(default=True, blank=True, null=True)
+    allow_manual_entry = models.BooleanField(default=False, blank=True, null=True)
     
     class Meta:
         verbose_name_plural = "Attendance Settings"
