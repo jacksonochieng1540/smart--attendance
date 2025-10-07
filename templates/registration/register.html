@@ -543,28 +543,6 @@
                 <div class="form-section" id="section-3">
                     <h5 class="mb-3">Employee Details</h5>
                     
-                    <!-- Employee ID -->
-                    <div class="form-group">
-                        <div class="input-group">
-                            <span class="input-group-text">
-                                <i class="fas fa-id-badge"></i>
-                            </span>
-                            <input type="text" 
-                                   class="form-control {% if form.employee_id.errors %}is-invalid{% endif %}" 
-                                   name="employee_id" 
-                                   placeholder="Employee ID" 
-                                   value="{{ form.employee_id.value|default:'' }}"
-                                   required>
-                        </div>
-                        {% if form.employee_id.errors %}
-                            <div class="error-message">
-                                {% for error in form.employee_id.errors %}
-                                    {{ error }}
-                                {% endfor %}
-                            </div>
-                        {% endif %}
-                    </div>
-
                     <!-- Position -->
                     <div class="form-group">
                         <div class="input-group">
@@ -595,11 +573,11 @@
                             </span>
                             <select class="form-select {% if form.department.errors %}is-invalid{% endif %}" name="department" required>
                                 <option value="">Select Department</option>
-                                <option value="1" {% if form.department.value == "1" %}selected{% endif %}>Human Resources</option>
-                                <option value="2" {% if form.department.value == "2" %}selected{% endif %}>Information Technology</option>
-                                <option value="3" {% if form.department.value == "3" %}selected{% endif %}>Finance</option>
-                                <option value="4" {% if form.department.value == "4" %}selected{% endif %}>Marketing</option>
-                                <option value="5" {% if form.department.value == "5" %}selected{% endif %}>Operations</option>
+                                {% for department in form.department.field.queryset %}
+                                    <option value="{{ department.id }}" {% if form.department.value == department.id %}selected{% endif %}>
+                                        {{ department.name }}
+                                    </option>
+                                {% endfor %}
                             </select>
                         </div>
                         {% if form.department.errors %}
@@ -609,6 +587,12 @@
                                 {% endfor %}
                             </div>
                         {% endif %}
+                    </div>
+
+                    <!-- Auto-generated Employee ID Info -->
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Note:</strong> Your Employee ID will be automatically generated after registration.
                     </div>
 
                     <!-- Terms and Conditions -->
@@ -644,7 +628,7 @@
                                        type="checkbox" 
                                        name="email_notifications" 
                                        id="email-notifications"
-                                       {% if form.email_notifications.value %}checked{% endif %}>
+                                       checked>
                                 <label class="form-check-label" for="email-notifications">
                                     Send me email notifications about attendance updates
                                 </label>

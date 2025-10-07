@@ -1,3 +1,4 @@
+# attendance/urls.py
 from django.urls import path
 from . import views
 
@@ -6,9 +7,12 @@ app_name = 'attendance'
 urlpatterns = [
     # Dashboard
     path('', views.dashboard, name='dashboard'),
+    path('dashboard/', views.dashboard, name='dashboard'),  # Alternative path
     
     # Authentication
     path('register/', views.register, name='register'),
+    path('profile/', views.profile, name='profile'),
+    path('change-password/', views.change_password, name='change_password'),
     
     # Attendance
     path('check-in/qr/', views.check_in_qr, name='check_in_qr'),
@@ -22,6 +26,7 @@ urlpatterns = [
     
     # Records & Reports
     path('attendance-records/', views.attendance_records, name='attendance_records'),
+    path('records/', views.attendance_records, name='records'),  # Add this alias
     path('reports/', views.reports, name='reports'),
     
     # Leave Management
