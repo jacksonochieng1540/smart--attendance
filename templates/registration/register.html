@@ -1,0 +1,773 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - Attendance System</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 40px 20px;
+        }
+
+        .register-container {
+            max-width: 600px;
+            width: 100%;
+        }
+
+        .register-card {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .logo-section {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .logo-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .logo-icon i {
+            font-size: 2.5rem;
+            color: white;
+        }
+
+        .logo-section h2 {
+            color: #1f2937;
+            margin-bottom: 5px;
+        }
+
+        .logo-section p {
+            color: #6b7280;
+            margin: 0;
+        }
+
+        .form-control, .form-select {
+            border-radius: 10px;
+            border: 2px solid #e5e7eb;
+            padding: 12px 15px;
+            margin-bottom: 15px;
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        .input-group-text {
+            background: #f9fafb;
+            border: 2px solid #e5e7eb;
+            border-right: none;
+            border-radius: 10px 0 0 10px;
+        }
+
+        .input-group .form-control {
+            border-left: none;
+            border-radius: 0 10px 10px 0;
+            margin-bottom: 0;
+        }
+
+        .password-strength {
+            height: 5px;
+            border-radius: 3px;
+            margin-top: -10px;
+            margin-bottom: 15px;
+            background: #e5e7eb;
+            overflow: hidden;
+        }
+
+        .password-strength-bar {
+            height: 100%;
+            width: 0;
+            transition: all 0.3s;
+            background: #ef4444;
+        }
+
+        .password-strength-bar.weak {
+            width: 33%;
+            background: #ef4444;
+        }
+
+        .password-strength-bar.medium {
+            width: 66%;
+            background: #f59e0b;
+        }
+
+        .password-strength-bar.strong {
+            width: 100%;
+            background: #10b981;
+        }
+
+        .password-requirements {
+            font-size: 0.85rem;
+            color: #6b7280;
+            margin-bottom: 15px;
+            padding: 10px;
+            background: #f9fafb;
+            border-radius: 8px;
+        }
+
+        .password-requirements li {
+            margin-bottom: 5px;
+        }
+
+        .password-requirements li.valid {
+            color: #10b981;
+        }
+
+        .password-requirements li.valid::before {
+            content: '✓ ';
+            font-weight: bold;
+        }
+
+        .password-requirements li.invalid::before {
+            content: '✗ ';
+            color: #ef4444;
+            font-weight: bold;
+        }
+
+        .btn-register {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 10px;
+            padding: 15px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: white;
+            width: 100%;
+            transition: all 0.3s;
+        }
+
+        .btn-register:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-register:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .terms-checkbox {
+            margin-bottom: 20px;
+        }
+
+        .terms-checkbox label {
+            color: #6b7280;
+            font-size: 0.9rem;
+        }
+
+        .terms-checkbox a {
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        .terms-checkbox a:hover {
+            text-decoration: underline;
+        }
+
+        .login-link {
+            text-align: center;
+            margin-top: 20px;
+            color: #6b7280;
+        }
+
+        .login-link a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .login-link a:hover {
+            text-decoration: underline;
+        }
+
+        .alert {
+            border-radius: 10px;
+            border: none;
+            margin-bottom: 20px;
+        }
+
+        .step-indicator {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+
+        .step {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #e5e7eb;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 10px;
+            font-weight: bold;
+            color: #6b7280;
+            position: relative;
+        }
+
+        .step.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .step.completed {
+            background: #10b981;
+            color: white;
+        }
+
+        .step::after {
+            content: '';
+            position: absolute;
+            width: 40px;
+            height: 2px;
+            background: #e5e7eb;
+            left: 100%;
+            top: 50%;
+        }
+
+        .step:last-child::after {
+            display: none;
+        }
+
+        .step.completed::after {
+            background: #10b981;
+        }
+
+        .form-section {
+            display: none;
+        }
+
+        .form-section.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="register-container">
+        <div class="register-card">
+            <!-- Logo Section -->
+            <div class="logo-section">
+                <div class="logo-icon">
+                    <i class="fas fa-user-plus"></i>
+                </div>
+                <h2>Create Account</h2>
+                <p>Join Smart Attendance Management System</p>
+            </div>
+
+            <!-- Step Indicator -->
+            <div class="step-indicator">
+                <div class="step active" id="step-1">1</div>
+                <div class="step" id="step-2">2</div>
+                <div class="step" id="step-3">3</div>
+            </div>
+
+            <!-- Messages -->
+            {% if messages %}
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                {% endfor %}
+            {% endif %}
+
+            <!-- Registration Form -->
+            <form method="post" id="registration-form">
+                {% csrf_token %}
+                
+                <!-- Step 1: Personal Information -->
+                <div class="form-section active" id="section-1">
+                    <h5 class="mb-3">Personal Information</h5>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="fas fa-user"></i>
+                                </span>
+                                <input type="text" 
+                                       class="form-control" 
+                                       name="first_name" 
+                                       placeholder="First Name" 
+                                       required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="fas fa-user"></i>
+                                </span>
+                                <input type="text" 
+                                       class="form-control" 
+                                       name="last_name" 
+                                       placeholder="Last Name" 
+                                       required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <span class="input-group-text">
+                            <i class="fas fa-envelope"></i>
+                        </span>
+                        <input type="email" 
+                               class="form-control" 
+                               name="email" 
+                               placeholder="Email Address" 
+                               required>
+                    </div>
+
+                    <div class="input-group">
+                        <span class="input-group-text">
+                            <i class="fas fa-phone"></i>
+                        </span>
+                        <input type="tel" 
+                               class="form-control" 
+                               name="phone" 
+                               placeholder="Phone Number">
+                    </div>
+
+                    <button type="button" class="btn btn-register" onclick="nextStep(2)">
+                        Next <i class="fas fa-arrow-right ms-2"></i>
+                    </button>
+                </div>
+
+                <!-- Step 2: Account Details -->
+                <div class="form-section" id="section-2">
+                    <h5 class="mb-3">Account Details</h5>
+                    
+                    <div class="input-group">
+                        <span class="input-group-text">
+                            <i class="fas fa-at"></i>
+                        </span>
+                        <input type="text" 
+                               class="form-control" 
+                               name="username" 
+                               id="username"
+                               placeholder="Username" 
+                               required>
+                    </div>
+                    <small class="text-muted d-block mb-3">
+                        Username must be unique and contain only letters, numbers, and underscores
+                    </small>
+
+                    <div class="input-group position-relative">
+                        <span class="input-group-text">
+                            <i class="fas fa-lock"></i>
+                        </span>
+                        <input type="password" 
+                               class="form-control" 
+                               name="password1" 
+                               id="password1"
+                               placeholder="Password" 
+                               required
+                               onkeyup="checkPasswordStrength()">
+                        <i class="fas fa-eye password-toggle" 
+                           style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); cursor: pointer; z-index: 10;"
+                           onclick="togglePassword('password1')"></i>
+                    </div>
+
+                    <div class="password-strength">
+                        <div class="password-strength-bar" id="password-strength-bar"></div>
+                    </div>
+
+                    <ul class="password-requirements" id="password-requirements">
+                        <li class="invalid" id="req-length">At least 8 characters</li>
+                        <li class="invalid" id="req-uppercase">One uppercase letter</li>
+                        <li class="invalid" id="req-lowercase">One lowercase letter</li>
+                        <li class="invalid" id="req-number">One number</li>
+                    </ul>
+
+                    <div class="input-group position-relative">
+                        <span class="input-group-text">
+                            <i class="fas fa-lock"></i>
+                        </span>
+                        <input type="password" 
+                               class="form-control" 
+                               name="password2" 
+                               id="password2"
+                               placeholder="Confirm Password" 
+                               required
+                               onkeyup="checkPasswordMatch()">
+                        <i class="fas fa-eye password-toggle" 
+                           style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); cursor: pointer; z-index: 10;"
+                           onclick="togglePassword('password2')"></i>
+                    </div>
+                    <small class="text-muted d-block mb-3" id="password-match-msg"></small>
+
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-outline-secondary" onclick="prevStep(1)">
+                            <i class="fas fa-arrow-left me-2"></i>Back
+                        </button>
+                        <button type="button" class="btn btn-register flex-grow-1" onclick="nextStep(3)">
+                            Next <i class="fas fa-arrow-right ms-2"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Step 3: Employee Details & Terms -->
+                <div class="form-section" id="section-3">
+                    <h5 class="mb-3">Employee Details</h5>
+                    
+                    <div class="input-group">
+                        <span class="input-group-text">
+                            <i class="fas fa-building"></i>
+                        </span>
+                        <select class="form-select" name="department" required>
+                            <option value="">Select Department</option>
+                            <option value="hr">Human Resources</option>
+                            <option value="it">Information Technology</option>
+                            <option value="finance">Finance</option>
+                            <option value="marketing">Marketing</option>
+                            <option value="operations">Operations</option>
+                        </select>
+                    </div>
+
+                    <div class="input-group">
+                        <span class="input-group-text">
+                            <i class="fas fa-briefcase"></i>
+                        </span>
+                        <input type="text" 
+                               class="form-control" 
+                               name="position" 
+                               placeholder="Position/Job Title" 
+                               required>
+                    </div>
+
+                    <div class="input-group">
+                        <span class="input-group-text">
+                            <i class="fas fa-id-badge"></i>
+                        </span>
+                        <input type="text" 
+                               class="form-control" 
+                               name="employee_id" 
+                               placeholder="Employee ID" 
+                               required>
+                    </div>
+
+                    <div class="terms-checkbox">
+                        <div class="form-check">
+                            <input class="form-check-input" 
+                                   type="checkbox" 
+                                   name="accept_terms" 
+                                   id="accept-terms" 
+                                   required>
+                            <label class="form-check-label" for="accept-terms">
+                                I agree to the <a href="#" data-bs-toggle="modal" data-bs-target="#termsModal">Terms of Service</a> 
+                                and <a href="#" data-bs-toggle="modal" data-bs-target="#privacyModal">Privacy Policy</a>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="terms-checkbox">
+                        <div class="form-check">
+                            <input class="form-check-input" 
+                                   type="checkbox" 
+                                   name="email_notifications" 
+                                   id="email-notifications"
+                                   checked>
+                            <label class="form-check-label" for="email-notifications">
+                                Send me email notifications about attendance updates
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-outline-secondary" onclick="prevStep(2)">
+                            <i class="fas fa-arrow-left me-2"></i>Back
+                        </button>
+                        <button type="submit" class="btn btn-register flex-grow-1" id="submit-btn">
+                            <i class="fas fa-user-check me-2"></i>Create Account
+                        </button>
+                    </div>
+                </div>
+            </form>
+
+            <!-- Login Link -->
+            <div class="login-link">
+                Already have an account? <a href="{% url 'login' %}">Sign in here</a>
+            </div>
+        </div>
+
+        <!-- Copyright -->
+        <div class="text-center mt-4 text-white">
+            <small>&copy; 2025 Attendance System. All rights reserved.</small>
+        </div>
+    </div>
+
+    <!-- Terms Modal -->
+    <div class="modal fade" id="termsModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Terms of Service</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <h6>1. Acceptance of Terms</h6>
+                    <p>By accessing and using this attendance system, you accept and agree to be bound by the terms and provision of this agreement.</p>
+                    
+                    <h6>2. Use License</h6>
+                    <p>Permission is granted to use this system for attendance tracking purposes only. This license shall automatically terminate if you violate any of these restrictions.</p>
+                    
+                    <h6>3. User Obligations</h6>
+                    <p>Users must provide accurate attendance information and maintain the confidentiality of their login credentials.</p>
+                    
+                    <h6>4. Biometric Data</h6>
+                    <p>By enrolling your fingerprint, you consent to the collection and storage of your biometric data for authentication purposes only.</p>
+                    
+                    <h6>5. Privacy</h6>
+                    <p>We are committed to protecting your privacy. All personal data is encrypted and stored securely.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Privacy Policy Modal -->
+    <div class="modal fade" id="privacyModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Privacy Policy</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <h6>Information We Collect</h6>
+                    <p>We collect personal information (name, email, phone), biometric data (fingerprints), and attendance records.</p>
+                    
+                    <h6>How We Use Your Information</h6>
+                    <p>Your information is used solely for attendance tracking, payroll processing, and system access control.</p>
+                    
+                    <h6>Data Security</h6>
+                    <p>We implement industry-standard security measures including encryption, secure servers, and access controls.</p>
+                    
+                    <h6>Data Retention</h6>
+                    <p>Attendance records are retained for 7 years as per legal requirements. Biometric data is stored only while you are an active employee.</p>
+                    
+                    <h6>Your Rights</h6>
+                    <p>You have the right to access, correct, or delete your personal information at any time.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let currentStep = 1;
+
+        function nextStep(step) {
+            // Validate current step
+            if (!validateStep(currentStep)) {
+                return;
+            }
+
+            // Hide current section
+            document.getElementById(`section-${currentStep}`).classList.remove('active');
+            document.getElementById(`step-${currentStep}`).classList.remove('active');
+            document.getElementById(`step-${currentStep}`).classList.add('completed');
+
+            // Show next section
+            currentStep = step;
+            document.getElementById(`section-${step}`).classList.add('active');
+            document.getElementById(`step-${step}`).classList.add('active');
+
+            // Scroll to top
+            window.scrollTo(0, 0);
+        }
+
+        function prevStep(step) {
+            // Hide current section
+            document.getElementById(`section-${currentStep}`).classList.remove('active');
+            document.getElementById(`step-${currentStep}`).classList.remove('active');
+
+            // Show previous section
+            document.getElementById(`step-${step}`).classList.remove('completed');
+            currentStep = step;
+            document.getElementById(`section-${step}`).classList.add('active');
+            document.getElementById(`step-${step}`).classList.add('active');
+
+            // Scroll to top
+            window.scrollTo(0, 0);
+        }
+
+        function validateStep(step) {
+            const section = document.getElementById(`section-${step}`);
+            const inputs = section.querySelectorAll('input[required], select[required]');
+            let valid = true;
+
+            inputs.forEach(input => {
+                if (!input.value.trim()) {
+                    input.classList.add('is-invalid');
+                    valid = false;
+                } else {
+                    input.classList.remove('is-invalid');
+                }
+            });
+
+            if (!valid) {
+                alert('Please fill in all required fields');
+                return false;
+            }
+
+            // Additional validation for step 2
+            if (step === 2) {
+                const password1 = document.getElementById('password1').value;
+                const password2 = document.getElementById('password2').value;
+
+                if (password1 !== password2) {
+                    alert('Passwords do not match');
+                    return false;
+                }
+
+                if (!isPasswordStrong(password1)) {
+                    alert('Password does not meet the requirements');
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        function togglePassword(id) {
+            const password = document.getElementById(id);
+            const icon = password.parentElement.querySelector('.password-toggle');
+            
+            if (password.type === 'password') {
+                password.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                password.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        }
+
+        function checkPasswordStrength() {
+            const password = document.getElementById('password1').value;
+            const strengthBar = document.getElementById('password-strength-bar');
+            
+            // Check requirements
+            const hasLength = password.length >= 8;
+            const hasUppercase = /[A-Z]/.test(password);
+            const hasLowercase = /[a-z]/.test(password);
+            const hasNumber = /[0-9]/.test(password);
+
+            // Update requirement indicators
+            updateRequirement('req-length', hasLength);
+            updateRequirement('req-uppercase', hasUppercase);
+            updateRequirement('req-lowercase', hasLowercase);
+            updateRequirement('req-number', hasNumber);
+
+            // Calculate strength
+            let strength = 0;
+            if (hasLength) strength++;
+            if (hasUppercase) strength++;
+            if (hasLowercase) strength++;
+            if (hasNumber) strength++;
+
+            // Update strength bar
+            strengthBar.className = 'password-strength-bar';
+            if (strength > 0 && strength <= 2) {
+                strengthBar.classList.add('weak');
+            } else if (strength === 3) {
+                strengthBar.classList.add('medium');
+            } else if (strength === 4) {
+                strengthBar.classList.add('strong');
+            }
+        }
+
+        function updateRequirement(id, valid) {
+            const element = document.getElementById(id);
+            if (valid) {
+                element.classList.remove('invalid');
+                element.classList.add('valid');
+            } else {
+                element.classList.remove('valid');
+                element.classList.add('invalid');
+            }
+        }
+
+        function isPasswordStrong(password) {
+            return password.length >= 8 &&
+                   /[A-Z]/.test(password) &&
+                   /[a-z]/.test(password) &&
+                   /[0-9]/.test(password);
+        }
+
+        function checkPasswordMatch() {
+            const password1 = document.getElementById('password1').value;
+            const password2 = document.getElementById('password2').value;
+            const msg = document.getElementById('password-match-msg');
+
+            if (password2.length > 0) {
+                if (password1 === password2) {
+                    msg.textContent = '✓ Passwords match';
+                    msg.style.color = '#10b981';
+                } else {
+                    msg.textContent = '✗ Passwords do not match';
+                    msg.style.color = '#ef4444';
+                }
+            } else {
+                msg.textContent = '';
+            }
+        }
+
+        // Form submission
+        document.getElementById('registration-form').addEventListener('submit', function(e) {
+            if (!validateStep(3)) {
+                e.preventDefault();
+                return;
+            }
+            
+            const submitBtn = document.getElementById('submit-btn');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Creating Account...';
+        });
+
+        // Auto-dismiss alerts
+        setTimeout(function() {
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(alert => {
+                const bsAlert = new bootstrap.Alert(alert);
+                bsAlert.close();
+            });
+        }, 5000);
+    </script>
+</body>
+</html>
