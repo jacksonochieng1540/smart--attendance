@@ -1,4 +1,3 @@
-# attendance/models.py
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.utils import timezone
@@ -8,7 +7,7 @@ from django.core.files import File
 import uuid
 
 class User(AbstractUser):
-    """Extended User model"""
+    
     ROLE_CHOICES = (
         ('admin', 'Administrator'),
         ('employee', 'Employee'),
@@ -24,7 +23,6 @@ class User(AbstractUser):
         super().save(*args, **kwargs)
 
 class Department(models.Model):
-    """Department model"""
     name = models.CharField(max_length=100)
     description = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -33,13 +31,12 @@ class Department(models.Model):
         return self.name
 
 class Employee(models.Model):
-    """Employee model with QR and fingerprint data"""
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='employee_profile')
     department = models.ForeignKey(Department, on_delete=models.SET_NULL, null=True)
     position = models.CharField(max_length=100)
     qr_code = models.ImageField(upload_to='qr_codes/', blank=True, null=True)
     qr_code_data = models.CharField(max_length=255, unique=True, blank=True)
-    fingerprint_data = models.TextField(blank=True, null=True)  # Store fingerprint template
+    fingerprint_data = models.TextField(blank=True, null=True) 
     fingerprint_enrolled = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     date_joined = models.DateField(auto_now_add=True)
@@ -48,7 +45,6 @@ class Employee(models.Model):
         return f"{self.user.get_full_name()} - {self.user.employee_id}"
     
     def generate_qr_code(self):
-        """Generate QR code for employee"""
         qr_data = f"{self.user.employee_id}:{self.user.email}:{uuid.uuid4()}"
         self.qr_code_data = qr_data
         
@@ -69,7 +65,6 @@ class Employee(models.Model):
         super().save(*args, **kwargs)
 
 class AttendanceRecord(models.Model):
-    """Attendance tracking model"""
     VERIFICATION_CHOICES = (
         ('qr', 'QR Code'),
         ('fingerprint', 'Fingerprint'),
@@ -101,7 +96,6 @@ class AttendanceRecord(models.Model):
         return f"{self.employee.user.get_full_name()} - {self.date}"
     
     def calculate_working_hours(self):
-        """Calculate working hours"""
         if self.check_in and self.check_out:
             from datetime import datetime, timedelta
             check_in_dt = datetime.combine(self.date, self.check_in)
@@ -117,7 +111,6 @@ class AttendanceRecord(models.Model):
         return 0
     
     def determine_status(self, expected_time="09:00"):
-        """Determine if employee is late"""
         from datetime import datetime
         if self.check_in:
             expected = datetime.strptime(expected_time, "%H:%M").time()
@@ -129,7 +122,6 @@ class AttendanceRecord(models.Model):
             self.status = 'absent'
 
 class LeaveRequest(models.Model):
-    """Leave management model"""
     LEAVE_TYPES = (
         ('sick', 'Sick Leave'),
         ('casual', 'Casual Leave'),
@@ -157,7 +149,6 @@ class LeaveRequest(models.Model):
         return f"{self.employee.user.get_full_name()} - {self.leave_type} ({self.start_date})"
 
 class AttendanceSettings(models.Model):
-    """System settings for attendance"""
     expected_check_in_time = models.TimeField(default="09:00")
     expected_check_out_time = models.TimeField(default="17:00")
     grace_period_minutes = models.IntegerField(default=15)
