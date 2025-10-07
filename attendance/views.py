@@ -1,4 +1,3 @@
-# attendance/views.py
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -15,7 +14,6 @@ def dashboard(request):
     """Main dashboard view"""
     today = timezone.now().date()
     
-    # Get statistics
     total_employees = Employee.objects.filter(is_active=True).count()
     present_today = AttendanceRecord.objects.filter(
         date=today,
@@ -28,18 +26,18 @@ def dashboard(request):
         status='late'
     ).count()
     
-    # Calculate average hours
+  
     avg_hours = AttendanceRecord.objects.filter(
         date=today,
         working_hours__isnull=False
     ).aggregate(Avg('working_hours'))['working_hours__avg'] or 0
     
-    # Recent attendance records
+    
     recent_records = AttendanceRecord.objects.select_related(
         'employee__user', 'employee__department'
     ).filter(date=today)[:10]
     
-    # Absent employees
+   
     present_employee_ids = AttendanceRecord.objects.filter(
         date=today
     ).values_list('employee_id', flat=True)
@@ -117,12 +115,12 @@ def employee_detail(request, pk):
     """Employee detail view"""
     employee = get_object_or_404(Employee, pk=pk)
     
-    # Get attendance history
+    
     attendance_history = AttendanceRecord.objects.filter(
         employee=employee
     ).order_by('-date')[:30]
     
-    # Calculate statistics
+ 
     total_days = attendance_history.count()
     present_days = attendance_history.filter(status='present').count()
     late_days = attendance_history.filter(status='late').count()
@@ -148,7 +146,7 @@ def check_in_qr(request):
             today = timezone.now().date()
             current_time = timezone.now().time()
             
-            # Check if already checked in
+            #
             existing = AttendanceRecord.objects.filter(
                 employee=employee,
                 date=today
@@ -157,8 +155,7 @@ def check_in_qr(request):
             if existing and existing.check_in:
                 messages.warning(request, 'Already checked in today!')
                 return redirect('attendance:dashboard')
-            
-            # Create or update attendance
+           
             record, created = AttendanceRecord.objects.get_or_create(
                 employee=employee,
                 date=today,
@@ -196,8 +193,7 @@ def check_in_fingerprint(request):
                 fingerprint_enrolled=True
             )
             
-            # In production, verify fingerprint data against stored template
-            # For demo, we'll just check if it exists
+
             if not fingerprint_data:
                 messages.error(request, 'Fingerprint verification failed!')
                 return redirect('attendance:check_in_fingerprint')
@@ -205,7 +201,6 @@ def check_in_fingerprint(request):
             today = timezone.now().date()
             current_time = timezone.now().time()
             
-            # Check if already checked in
             existing = AttendanceRecord.objects.filter(
                 employee=employee,
                 date=today
@@ -215,7 +210,7 @@ def check_in_fingerprint(request):
                 messages.warning(request, 'Already checked in today!')
                 return redirect('attendance:dashboard')
             
-            # Create or update attendance
+           
             record, created = AttendanceRecord.objects.get_or_create(
                 employee=employee,
                 date=today,
@@ -287,13 +282,12 @@ def reports(request):
         date__range=[start_date, end_date]
     ).select_related('employee__user', 'employee__department')
     
-    # Statistics
+   
     total_records = records.count()
     present_count = records.filter(status='present').count()
     late_count = records.filter(status='late').count()
     absent_count = records.filter(status='absent').count()
-    
-    # Department-wise statistics
+   
     dept_stats = records.values(
         'employee__department__name'
     ).annotate(
