@@ -1,81 +1,306 @@
 {% extends 'attendance/base.html' %}
 {% load static %}
 
-{% block title %}Check Out - Attendance System{% endblock %}
+{% block title %}Check Out{% endblock %}
+
+{% block extra_css %}
+<style>
+    .checkout-container {
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    .checkout-card {
+        background: white;
+        border-radius: 15px;
+        padding: 40px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+    }
+
+    .checkout-header {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+
+    .checkout-icon {
+        width: 100px;
+        height: 100px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 20px;
+        animation: pulse 2s infinite;
+    }
+
+    .checkout-icon i {
+        font-size: 3rem;
+        color: white;
+    }
+
+    @keyframes pulse {
+        0%, 100% {
+            transform: scale(1);
+        }
+        50% {
+            transform: scale(1.05);
+        }
+    }
+
+    .time-display {
+        background: #f9fafb;
+        padding: 20px;
+        border-radius: 10px;
+        text-align: center;
+        margin: 20px 0;
+    }
+
+    .time-display .current-time {
+        font-size: 2.5rem;
+        font-weight: bold;
+        color: #667eea;
+        font-family: 'Courier New', monospace;
+    }
+
+    .time-display .current-date {
+        color: #6b7280;
+        margin-top: 5px;
+    }
+
+    .employee-input {
+        position: relative;
+    }
+
+    .employee-input i {
+        position: absolute;
+        left: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #9ca3af;
+    }
+
+    .employee-input input {
+        padding-left: 45px;
+        height: 60px;
+        font-size: 1.1rem;
+        border: 2px solid #e5e7eb;
+        border-radius: 10px;
+        transition: all 0.3s;
+    }
+
+    .employee-input input:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .checkout-btn {
+        height: 60px;
+        font-size: 1.1rem;
+        border-radius: 10px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        transition: transform 0.2s;
+    }
+
+    .checkout-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+    }
+
+    .info-box {
+        background: #eff6ff;
+        border-left: 4px solid #3b82f6;
+        padding: 15px;
+        border-radius: 5px;
+        margin: 20px 0;
+    }
+
+    .recent-checkout {
+        margin-top: 30px;
+        padding-top: 30px;
+        border-top: 2px solid #e5e7eb;
+    }
+
+    .recent-checkout-item {
+        display: flex;
+        align-items: center;
+        padding: 15px;
+        background: #f9fafb;
+        border-radius: 8px;
+        margin-bottom: 10px;
+    }
+
+    .recent-checkout-item img {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        margin-right: 15px;
+    }
+
+    .recent-checkout-item .info {
+        flex: 1;
+    }
+
+    .recent-checkout-item .time {
+        font-weight: bold;
+        color: #667eea;
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="container-fluid py-4">
-    <div class="row justify-content-center">
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-header bg-white">
-                    <h4 class="mb-0">Check Out</h4>
+<div class="container py-5">
+    <div class="checkout-container">
+        <div class="checkout-card">
+            <div class="checkout-header">
+                <div class="checkout-icon">
+                    <i class="fas fa-sign-out-alt"></i>
                 </div>
-                <div class="card-body">
-                    <form method="post">
-                        {% csrf_token %}
-                        
-                        <div class="mb-4 text-center">
-                            <i class="fas fa-sign-out-alt fa-4x text-info mb-3"></i>
-                            <h5>End Your Work Day</h5>
-                            <p class="text-muted">Enter your employee ID to check out</p>
-                        </div>
+                <h2>Check Out</h2>
+                <p class="text-muted">End your work day</p>
+            </div>
 
-                        <div class="mb-3">
-                            <label for="employee_id" class="form-label">Employee ID</label>
-                            <input type="text" 
-                                   class="form-control form-control-lg" 
-                                   id="employee_id" 
-                                   name="employee_id" 
-                                   placeholder="Enter your employee ID" 
-                                   required
-                                   autofocus>
-                            <div class="form-text">Enter the same ID you used for check-in</div>
-                        </div>
+            <!-- Current Time Display -->
+            <div class="time-display">
+                <div class="current-time" id="current-time">--:--:--</div>
+                <div class="current-date" id="current-date">Loading...</div>
+            </div>
 
-                        <div class="d-grid">
-                            <button type="submit" class="btn btn-info btn-lg">
-                                <i class="fas fa-sign-out-alt me-2"></i> Check Out
-                            </button>
-                        </div>
-                    </form>
+            <!-- Info Box -->
+            <div class="info-box">
+                <i class="fas fa-info-circle me-2"></i>
+                <strong>Note:</strong> Make sure you've completed all your tasks before checking out. Your working hours will be automatically calculated.
+            </div>
 
-                    <div class="mt-4 p-3 bg-light rounded">
-                        <h6><i class="fas fa-info-circle me-2"></i>Important Notes:</h6>
-                        <ul class="mb-0 small">
-                            <li>You must have checked in today to check out</li>
-                            <li>Check-out time will be recorded automatically</li>
-                            <li>Working hours will be calculated automatically</li>
-                        </ul>
+            <!-- Check-out Form -->
+            <form method="post" id="checkout-form">
+                {% csrf_token %}
+                
+                <div class="mb-4">
+                    <label for="employee-id" class="form-label">Employee ID</label>
+                    <div class="employee-input">
+                        <i class="fas fa-id-card"></i>
+                        <input type="text" 
+                               class="form-control" 
+                               id="employee-id" 
+                               name="employee_id" 
+                               placeholder="Enter your Employee ID" 
+                               required
+                               autocomplete="off"
+                               autofocus>
                     </div>
+                    <small class="form-text text-muted">
+                        <i class="fas fa-lock"></i> Your Employee ID is case-sensitive
+                    </small>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100 checkout-btn">
+                    <i class="fas fa-sign-out-alt me-2"></i> Check Out Now
+                </button>
+            </form>
+
+            <!-- Alternative Methods -->
+            <div class="text-center mt-4">
+                <p class="text-muted mb-3">Or use alternative method:</p>
+                <div class="d-flex gap-2 justify-content-center">
+                    <a href="{% url 'attendance:check_in_qr' %}" class="btn btn-outline-primary">
+                        <i class="fas fa-qrcode"></i> Scan QR
+                    </a>
+                    <a href="{% url 'attendance:check_in_fingerprint' %}" class="btn btn-outline-success">
+                        <i class="fas fa-fingerprint"></i> Fingerprint
+                    </a>
                 </div>
             </div>
+
+            <!-- Recent Checkouts -->
+            <div class="recent-checkout">
+                <h6 class="mb-3"><i class="fas fa-clock"></i> Recent Check-outs</h6>
+                
+                <div class="recent-checkout-item">
+                    <img src="{% static 'img/default-avatar.png' %}" alt="User">
+                    <div class="info">
+                        <div class="fw-semibold">John Doe</div>
+                        <small class="text-muted">Marketing Department</small>
+                    </div>
+                    <div class="time">05:30 PM</div>
+                </div>
+
+                <div class="recent-checkout-item">
+                    <img src="{% static 'img/default-avatar.png' %}" alt="User">
+                    <div class="info">
+                        <div class="fw-semibold">Jane Smith</div>
+                        <small class="text-muted">Human Resources</small>
+                    </div>
+                    <div class="time">05:25 PM</div>
+                </div>
+
+                <div class="recent-checkout-item">
+                    <img src="{% static 'img/default-avatar.png' %}" alt="User">
+                    <div class="info">
+                        <div class="fw-semibold">Mike Johnson</div>
+                        <small class="text-muted">Operations</small>
+                    </div>
+                    <div class="time">05:15 PM</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="text-center mt-4">
+            <a href="{% url 'attendance:dashboard' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Dashboard
+            </a>
         </div>
     </div>
 </div>
 
-<style>
-.card {
-    border: none;
-    box-shadow: 0 0 20px rgba(0,0,0,0.1);
-    border-radius: 15px;
-}
+<script>
+    // Update current time
+    function updateTime() {
+        const now = new Date();
+        
+        // Format time
+        const hours = now.getHours().toString().padStart(2, '0');
+        const minutes = now.getMinutes().toString().padStart(2, '0');
+        const seconds = now.getSeconds().toString().padStart(2, '0');
+        document.getElementById('current-time').textContent = `${hours}:${minutes}:${seconds}`;
+        
+        // Format date
+        const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        const dateStr = now.toLocaleDateString('en-US', options);
+        document.getElementById('current-date').textContent = dateStr;
+    }
 
-.form-control {
-    border-radius: 10px;
-    border: 2px solid #e9ecef;
-    transition: all 0.3s;
-}
+    // Update time every second
+    updateTime();
+    setInterval(updateTime, 1000);
 
-.form-control:focus {
-    border-color: #17a2b8;
-    box-shadow: 0 0 0 0.2rem rgba(23, 162, 184, 0.25);
-}
+    // Form submission handling
+    document.getElementById('checkout-form').addEventListener('submit', function(e) {
+        const employeeId = document.getElementById('employee-id').value.trim();
+        
+        if (!employeeId) {
+            e.preventDefault();
+            alert('Please enter your Employee ID');
+            return;
+        }
 
-.btn {
-    border-radius: 10px;
-    padding: 12px 24px;
-    font-weight: 600;
-}
-</style>
+        // Show loading state
+        const btn = this.querySelector('button[type="submit"]');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Processing...';
+        btn.disabled = true;
+    });
+
+    // Enable Enter key submission
+    document.getElementById('employee-id').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            document.getElementById('checkout-form').submit();
+        }
+    });
+
+    // Auto-focus on input
+    document.getElementById('employee-id').focus();
+</script>
 {% endblock %}

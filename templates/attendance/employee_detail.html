@@ -1,177 +1,425 @@
 {% extends 'attendance/base.html' %}
 {% load static %}
 
-{% block title %}{{ employee.user.get_full_name }} - Employee Details{% endblock %}
+{% block title %}{{ employee.user.get_full_name }} - Details{% endblock %}
+
+{% block extra_css %}
+<style>
+    .profile-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 40px;
+        border-radius: 15px;
+        margin-bottom: 30px;
+    }
+
+    .profile-avatar {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        border: 5px solid white;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+    }
+
+    .stat-box {
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        text-align: center;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    .stat-box h3 {
+        color: #667eea;
+        margin: 0;
+        font-size: 2rem;
+    }
+
+    .stat-box p {
+        margin: 5px 0 0;
+        color: #6b7280;
+    }
+
+    .qr-code-card {
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        text-align: center;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    .qr-code-card img {
+        max-width: 200px;
+        border: 3px solid #e5e7eb;
+        border-radius: 10px;
+        padding: 10px;
+    }
+
+    .attendance-calendar {
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    .timeline-item {
+        border-left: 3px solid #667eea;
+        padding-left: 20px;
+        margin-bottom: 20px;
+        position: relative;
+    }
+
+    .timeline-item::before {
+        content: '';
+        position: absolute;
+        left: -7px;
+        top: 0;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: #667eea;
+    }
+
+    .timeline-item.late::before {
+        background: #f59e0b;
+    }
+
+    .timeline-item.absent::before {
+        background: #ef4444;
+    }
+
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin-top: 20px;
+    }
+
+    .info-item {
+        padding: 15px;
+        background: #f9fafb;
+        border-radius: 8px;
+    }
+
+    .info-item label {
+        font-size: 0.85rem;
+        color: #6b7280;
+        margin-bottom: 5px;
+        display: block;
+    }
+
+    .info-item .value {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #111827;
+    }
+</style>
+{% endblock %}
 
 {% block content %}
 <div class="container-fluid py-4">
-    <!-- Header -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div class="d-flex align-items-center">
-            <a href="{% url 'attendance:employee_list' %}" class="btn btn-outline-secondary me-3">
-                <i class="fas fa-arrow-left"></i>
-            </a>
-            <div>
-                <h2 class="mb-0">Employee Details</h2>
-                <nav aria-label="breadcrumb">
-                    <ol class="breadcrumb mb-0">
-                        <li class="breadcrumb-item"><a href="{% url 'attendance:dashboard' %}">Dashboard</a></li>
-                        <li class="breadcrumb-item"><a href="{% url 'attendance:employee_list' %}">Employees</a></li>
-                        <li class="breadcrumb-item active">{{ employee.user.get_full_name }}</li>
-                    </ol>
-                </nav>
+    <!-- Profile Header -->
+    <div class="profile-header">
+        <div class="row align-items-center">
+            <div class="col-md-2 text-center">
+                <img src="{% if employee.user.profile_image %}{{ employee.user.profile_image.url }}{% else %}{% static 'img/default-avatar.png' %}{% endif %}" 
+                     class="profile-avatar" 
+                     alt="{{ employee.user.get_full_name }}">
             </div>
-        </div>
-        <div>
-            <a href="{% url 'attendance:enroll_fingerprint' employee.id %}" class="btn btn-success">
-                <i class="fas fa-fingerprint me-2"></i>Enroll Fingerprint
-            </a>
+            <div class="col-md-7">
+                <h2 class="mb-2">{{ employee.user.get_full_name }}</h2>
+                <p class="mb-2">{{ employee.position }}</p>
+                <div class="d-flex gap-2 flex-wrap">
+                    <span class="badge bg-light text-dark">
+                        <i class="fas fa-id-card"></i> {{ employee.user.employee_id }}
+                    </span>
+                    {% if employee.department %}
+                    <span class="badge bg-light text-dark">
+                        <i class="fas fa-building"></i> {{ employee.department.name }}
+                    </span>
+                    {% endif %}
+                    <span class="badge bg-light text-dark">
+                        <i class="fas fa-envelope"></i> {{ employee.user.email }}
+                    </span>
+                    {% if employee.user.phone %}
+                    <span class="badge bg-light text-dark">
+                        <i class="fas fa-phone"></i> {{ employee.user.phone }}
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="col-md-3 text-end">
+                <div class="dropdown">
+                    <button class="btn btn-light dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-cog"></i> Actions
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li>
+                            <a class="dropdown-item" href="{% url 'attendance:enroll_fingerprint' employee.pk %}">
+                                <i class="fas fa-fingerprint"></i> Enroll Fingerprint
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="#">
+                                <i class="fas fa-edit"></i> Edit Profile
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="#">
+                                <i class="fas fa-download"></i> Download QR Code
+                            </a>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <a class="dropdown-item text-danger" href="#">
+                                <i class="fas fa-user-slash"></i> Deactivate
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
         </div>
     </div>
 
-    <div class="row">
-        <!-- Employee Information -->
-        <div class="col-lg-4 mb-4">
-            <div class="card">
-                <div class="card-header bg-white">
-                    <h5 class="mb-0">Employee Information</h5>
-                </div>
-                <div class="card-body text-center">
-                    <img src="{% if employee.user.profile_image %}{{ employee.user.profile_image.url }}{% else %}{% static 'img/default-avatar.png' %}{% endif %}" 
-                         class="rounded-circle mb-3" 
-                         width="120" height="120" 
-                         alt="{{ employee.user.get_full_name }}">
-                    
-                    <h4>{{ employee.user.get_full_name }}</h4>
-                    <p class="text-muted">{{ employee.user.employee_id }}</p>
-                    
-                    <div class="row text-start mt-4">
-                        <div class="col-12 mb-2">
-                            <strong><i class="fas fa-envelope me-2 text-primary"></i>Email:</strong>
-                            <p class="mb-0">{{ employee.user.email }}</p>
-                        </div>
-                        <div class="col-12 mb-2">
-                            <strong><i class="fas fa-building me-2 text-primary"></i>Department:</strong>
-                            <p class="mb-0">{{ employee.department.name|default:"Not assigned" }}</p>
-                        </div>
-                        <div class="col-12 mb-2">
-                            <strong><i class="fas fa-phone me-2 text-primary"></i>Phone:</strong>
-                            <p class="mb-0">{{ employee.phone|default:"Not provided" }}</p>
-                        </div>
-                        <div class="col-12 mb-2">
-                            <strong><i class="fas fa-map-marker-alt me-2 text-primary"></i>Address:</strong>
-                            <p class="mb-0">{{ employee.address|default:"Not provided"|linebreaks }}</p>
-                        </div>
-                        <div class="col-12">
-                            <strong><i class="fas fa-fingerprint me-2 text-primary"></i>Fingerprint:</strong>
-                            <p class="mb-0">
-                                {% if employee.fingerprint_enrolled %}
-                                    <span class="badge bg-success">Enrolled</span>
-                                {% else %}
-                                    <span class="badge bg-warning">Not Enrolled</span>
-                                {% endif %}
-                            </p>
-                        </div>
-                    </div>
-                </div>
+    <!-- Statistics -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="stat-box">
+                <h3>{{ total_days }}</h3>
+                <p>Total Days</p>
             </div>
         </div>
+        <div class="col-md-3">
+            <div class="stat-box">
+                <h3 class="text-success">{{ present_days }}</h3>
+                <p>Present Days</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-box">
+                <h3 class="text-warning">{{ late_days }}</h3>
+                <p>Late Days</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-box">
+                <h3 class="text-info">
+                    {% if total_days > 0 %}
+                        {{ present_days|add:late_days|floatformat:0|add:""|mul:100|div:total_days|floatformat:1 }}%
+                    {% else %}
+                        0%
+                    {% endif %}
+                </h3>
+                <p>Attendance Rate</p>
+            </div>
+        </div>
+    </div>
 
-        <!-- Statistics & Attendance History -->
+    <div class="row g-4">
+        <!-- Left Column -->
         <div class="col-lg-8">
-            <!-- Statistics -->
-            <div class="row mb-4">
-                <div class="col-md-4">
-                    <div class="card stat-card bg-primary text-white">
-                        <div class="card-body text-center">
-                            <h2 class="card-title">{{ total_days }}</h2>
-                            <p class="mb-0">Total Days</p>
-                        </div>
-                    </div>
+            <!-- Employee Information -->
+            <div class="card mb-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="fas fa-info-circle"></i> Employee Information</h5>
                 </div>
-                <div class="col-md-4">
-                    <div class="card stat-card bg-success text-white">
-                        <div class="card-body text-center">
-                            <h2 class="card-title">{{ present_days }}</h2>
-                            <p class="mb-0">Present Days</p>
+                <div class="card-body">
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <label>Employee ID</label>
+                            <div class="value">{{ employee.user.employee_id }}</div>
                         </div>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="card stat-card bg-warning text-white">
-                        <div class="card-body text-center">
-                            <h2 class="card-title">{{ late_days }}</h2>
-                            <p class="mb-0">Late Days</p>
+                        <div class="info-item">
+                            <label>Full Name</label>
+                            <div class="value">{{ employee.user.get_full_name }}</div>
+                        </div>
+                        <div class="info-item">
+                            <label>Email</label>
+                            <div class="value">{{ employee.user.email }}</div>
+                        </div>
+                        <div class="info-item">
+                            <label>Phone</label>
+                            <div class="value">{{ employee.user.phone|default:"N/A" }}</div>
+                        </div>
+                        <div class="info-item">
+                            <label>Department</label>
+                            <div class="value">{{ employee.department.name|default:"N/A" }}</div>
+                        </div>
+                        <div class="info-item">
+                            <label>Position</label>
+                            <div class="value">{{ employee.position }}</div>
+                        </div>
+                        <div class="info-item">
+                            <label>Date Joined</label>
+                            <div class="value">{{ employee.date_joined|date:"M d, Y" }}</div>
+                        </div>
+                        <div class="info-item">
+                            <label>Status</label>
+                            <div class="value">
+                                {% if employee.is_active %}
+                                    <span class="badge bg-success">Active</span>
+                                {% else %}
+                                    <span class="badge bg-danger">Inactive</span>
+                                {% endif %}
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
 
             <!-- Attendance History -->
+            <div class="attendance-calendar">
+                <h5 class="mb-4"><i class="fas fa-calendar-alt"></i> Recent Attendance History</h5>
+                
+                {% if attendance_history %}
+                    <div class="timeline">
+                        {% for record in attendance_history %}
+                        <div class="timeline-item {% if record.status == 'late' %}late{% elif record.status == 'absent' %}absent{% endif %}">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div>
+                                    <h6 class="mb-1">{{ record.date|date:"l, F d, Y" }}</h6>
+                                    <div class="text-muted small">
+                                        {% if record.check_in %}
+                                            <i class="fas fa-sign-in-alt text-success"></i> In: {{ record.check_in|time:"h:i A" }}
+                                        {% endif %}
+                                        {% if record.check_out %}
+                                            <i class="fas fa-sign-out-alt text-danger ms-3"></i> Out: {{ record.check_out|time:"h:i A" }}
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="text-end">
+                                    {% if record.status == 'present' %}
+                                        <span class="badge bg-success">Present</span>
+                                    {% elif record.status == 'late' %}
+                                        <span class="badge bg-warning">Late</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">Absent</span>
+                                    {% endif %}
+                                    {% if record.working_hours %}
+                                        <div class="small text-muted mt-1">{{ record.working_hours }}h worked</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% if record.verification_method %}
+                            <div class="small text-muted">
+                                Verified via: 
+                                {% if record.verification_method == 'qr' %}
+                                    <i class="fas fa-qrcode"></i> QR Code
+                                {% elif record.verification_method == 'fingerprint' %}
+                                    <i class="fas fa-fingerprint"></i> Fingerprint
+                                {% else %}
+                                    <i class="fas fa-user"></i> Manual
+                                {% endif %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center text-muted py-5">
+                        <i class="fas fa-calendar-times fa-3x mb-3 d-block"></i>
+                        <p>No attendance records found</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Right Column -->
+        <div class="col-lg-4">
+            <!-- QR Code -->
+            <div class="qr-code-card mb-4">
+                <h5 class="mb-3"><i class="fas fa-qrcode"></i> Employee QR Code</h5>
+                {% if employee.qr_code %}
+                    <img src="{{ employee.qr_code.url }}" alt="QR Code" class="mb-3">
+                    <div class="d-grid gap-2">
+                        <a href="{{ employee.qr_code.url }}" download="{{ employee.user.employee_id }}_qr.png" class="btn btn-primary">
+                            <i class="fas fa-download"></i> Download QR Code
+                        </a>
+                        <button class="btn btn-outline-primary" onclick="printQR()">
+                            <i class="fas fa-print"></i> Print QR Code
+                        </button>
+                    </div>
+                {% else %}
+                    <p class="text-muted">QR Code not generated</p>
+                    <button class="btn btn-primary">Generate QR Code</button>
+                {% endif %}
+            </div>
+
+            <!-- Fingerprint Status -->
+            <div class="card mb-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="fas fa-fingerprint"></i> Biometric Status</h5>
+                </div>
+                <div class="card-body text-center">
+                    {% if employee.fingerprint_enrolled %}
+                        <i class="fas fa-check-circle fa-4x text-success mb-3"></i>
+                        <h5>Fingerprint Enrolled</h5>
+                        <p class="text-muted">Biometric authentication is active</p>
+                        <button class="btn btn-outline-danger">
+                            <i class="fas fa-trash"></i> Remove Fingerprint
+                        </button>
+                    {% else %}
+                        <i class="fas fa-exclamation-circle fa-4x text-warning mb-3"></i>
+                        <h5>Not Enrolled</h5>
+                        <p class="text-muted">Fingerprint not registered yet</p>
+                        <a href="{% url 'attendance:enroll_fingerprint' employee.pk %}" class="btn btn-primary">
+                            <i class="fas fa-fingerprint"></i> Enroll Now
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Quick Stats -->
             <div class="card">
                 <div class="card-header bg-white">
-                    <h5 class="mb-0">Recent Attendance (Last 30 Days)</h5>
+                    <h5 class="mb-0"><i class="fas fa-chart-pie"></i> Quick Stats</h5>
                 </div>
-                <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-hover mb-0">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>Date</th>
-                                    <th>Check In</th>
-                                    <th>Check Out</th>
-                                    <th>Hours</th>
-                                    <th>Status</th>
-                                    <th>Method</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for record in attendance_history %}
-                                <tr>
-                                    <td>{{ record.date|date:"M d, Y" }}</td>
-                                    <td>
-                                        {% if record.check_in %}
-                                            <span class="text-success">{{ record.check_in|time:"H:i" }}</span>
-                                        {% else %}
-                                            <span class="text-muted">-</span>
-                                        {% endif %}
-                                    </td>
-                                    <td>
-                                        {% if record.check_out %}
-                                            <span class="text-danger">{{ record.check_out|time:"H:i" }}</span>
-                                        {% else %}
-                                            <span class="text-muted">-</span>
-                                        {% endif %}
-                                    </td>
-                                    <td>
-                                        {% if record.working_hours %}
-                                            {{ record.working_hours }}h
-                                        {% else %}
-                                            <span class="text-muted">-</span>
-                                        {% endif %}
-                                    </td>
-                                    <td>
-                                        {% if record.status == 'present' %}
-                                            <span class="badge bg-success">Present</span>
-                                        {% elif record.status == 'late' %}
-                                            <span class="badge bg-warning">Late</span>
-                                        {% else %}
-                                            <span class="badge bg-danger">Absent</span>
-                                        {% endif %}
-                                    </td>
-                                    <td>
-                                        <span class="badge bg-info">{{ record.verification_method|title }}</span>
-                                    </td>
-                                </tr>
-                                {% empty %}
-                                <tr>
-                                    <td colspan="6" class="text-center py-4 text-muted">
-                                        No attendance records found
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span>Attendance Rate</span>
+                            <span class="fw-bold">
+                                {% if total_days > 0 %}
+                                    {% widthratio present_days total_days 100 %}%
+                                {% else %}
+                                    0%
+                                {% endif %}
+                            </span>
+                        </div>
+                        <div class="progress">
+                            <div class="progress-bar bg-success" style="width: {% if total_days > 0 %}{% widthratio present_days total_days 100 %}{% else %}0{% endif %}%"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span>Punctuality</span>
+                            <span class="fw-bold">
+                                {% if present_days|add:late_days > 0 %}
+                                    {% widthratio present_days present_days|add:late_days 100 %}%
+                                {% else %}
+                                    0%
+                                {% endif %}
+                            </span>
+                        </div>
+                        <div class="progress">
+                            <div class="progress-bar bg-info" style="width: {% if present_days|add:late_days > 0 %}{% widthratio present_days present_days|add:late_days 100 %}{% else %}0{% endif %}%"></div>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <div class="d-flex justify-content-between mb-2">
+                        <span><i class="fas fa-calendar-check text-success"></i> Present Days</span>
+                        <span class="fw-bold">{{ present_days }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span><i class="fas fa-clock text-warning"></i> Late Days</span>
+                        <span class="fw-bold">{{ late_days }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span><i class="fas fa-calendar-times text-danger"></i> Absent Days</span>
+                        <span class="fw-bold">{{ total_days|add:present_days|add:late_days|mul:-1|add:total_days }}</span>
                     </div>
                 </div>
             </div>
@@ -179,25 +427,30 @@
     </div>
 </div>
 
-<style>
-.stat-card {
-    border: none;
-    border-radius: 10px;
-    transition: transform 0.2s;
+<script>
+function printQR() {
+    const qrImage = document.querySelector('.qr-code-card img');
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(`
+        <html>
+            <head>
+                <title>Print QR Code - {{ employee.user.employee_id }}</title>
+                <style>
+                    body { text-align: center; font-family: Arial; padding: 50px; }
+                    img { max-width: 300px; margin: 20px; }
+                    h2 { margin: 10px 0; }
+                </style>
+            </head>
+            <body>
+                <h2>{{ employee.user.get_full_name }}</h2>
+                <p>Employee ID: {{ employee.user.employee_id }}</p>
+                <img src="${qrImage.src}" alt="QR Code">
+                <p>{{ employee.department.name|default:"" }} - {{ employee.position }}</p>
+            </body>
+        </html>
+    `);
+    printWindow.document.close();
+    printWindow.print();
 }
-
-.stat-card:hover {
-    transform: translateY(-2px);
-}
-
-.card {
-    border: none;
-    box-shadow: 0 0 20px rgba(0,0,0,0.1);
-    border-radius: 10px;
-}
-
-.table-hover tbody tr:hover {
-    background-color: #f8f9fa;
-}
-</style>
+</script>
 {% endblock %}
