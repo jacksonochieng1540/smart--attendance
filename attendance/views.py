@@ -6,8 +6,63 @@ from django.db.models import Count, Q, Avg
 from django.http import JsonResponse
 from datetime import datetime, timedelta
 from .models import Employee, AttendanceRecord, Department, LeaveRequest, AttendanceSettings
-from .forms import CheckInForm, CheckOutForm, EmployeeForm, LeaveRequestForm
+from .forms import CheckInForm, CheckOutForm, EmployeeForm, LeaveRequestForm, PasswordChangeForm, CustomUserCreationForm,EmployeeUpdateForm
+from django.contrib.auth import update_session_auth_hash
+from django.contrib.auth import login, authenticate
+from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.models import User
 import json
+
+
+def register(request):
+    """User registration view"""
+    if request.method == 'POST':
+        form = CustomUserCreationForm(request.POST)
+        if form.is_valid():
+            try:
+                # Create user
+                user = form.save()
+                
+                # Create employee profile
+                employee = Employee.objects.create(
+                    user=user,
+                    phone_number=form.cleaned_data.get('phone', ''),
+                    employee_id=form.cleaned_data['employee_id'],
+                    position=form.cleaned_data['position'],
+                    is_active=True
+                )
+                
+                # Log the user in
+                login(request, user)
+                messages.success(request, f"Account created successfully! Welcome {user.get_full_name()}")
+                return redirect('attendance:dashboard')
+                
+            except Exception as e:
+                messages.error(request, f"Error creating account: {str(e)}")
+                # Clean up if user was created but employee failed
+                if User.objects.filter(username=form.cleaned_data['username']).exists():
+                    User.objects.filter(username=form.cleaned_data['username']).delete()
+    else:
+        form = CustomUserCreationForm()
+    
+    return render(request, 'registration/register.html', {'form': form})
+
+@login_required
+def change_password(request):
+    """Change password view"""
+    if request.method == 'POST':
+        form = PasswordChangeForm(request.user, request.POST)
+        if form.is_valid():
+            user = form.save()
+            update_session_auth_hash(request, user)  # Important!
+            messages.success(request, 'Your password was successfully updated!')
+            return redirect('attendance:profile')
+        else:
+            messages.error(request, 'Please correct the error below.')
+    else:
+        form = PasswordChangeForm(request.user)
+    
+    return render(request, 'registration/change_password.html', {'form': form})
 
 @login_required
 def dashboard(request):
