@@ -1,184 +1,613 @@
-{% extends 'attendance/base.html' %}
+{% extends 'base.html' %}
 {% load static %}
 
 {% block title %}Enroll Fingerprint - {{ employee.user.get_full_name }}{% endblock %}
 
+{% block extra_css %}
+<style>
+    .enrollment-container {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+
+    .employee-info-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 30px;
+        border-radius: 15px;
+        margin-bottom: 30px;
+        text-align: center;
+    }
+
+    .employee-avatar-large {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        border: 4px solid white;
+        margin-bottom: 15px;
+    }
+
+    .enrollment-steps {
+        background: white;
+        border-radius: 15px;
+        padding: 30px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        margin-bottom: 30px;
+    }
+
+    .step {
+        display: flex;
+        align-items: start;
+        padding: 20px;
+        margin-bottom: 15px;
+        border-radius: 10px;
+        background: #f9fafb;
+        transition: all 0.3s;
+    }
+
+    .step.active {
+        background: #eff6ff;
+        border-left: 4px solid #3b82f6;
+    }
+
+    .step.completed {
+        background: #d1fae5;
+        border-left: 4px solid #10b981;
+    }
+
+    .step-number {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: #e5e7eb;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        margin-right: 15px;
+        flex-shrink: 0;
+    }
+
+    .step.active .step-number {
+        background: #3b82f6;
+        color: white;
+    }
+
+    .step.completed .step-number {
+        background: #10b981;
+        color: white;
+    }
+
+    .scanner-area {
+        background: white;
+        border-radius: 15px;
+        padding: 40px;
+        text-align: center;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        margin-bottom: 30px;
+    }
+
+    .fingerprint-animation {
+        width: 200px;
+        height: 200px;
+        margin: 0 auto 30px;
+        position: relative;
+    }
+
+    .fingerprint-icon {
+        font-size: 120px;
+        color: #e5e7eb;
+        transition: all 0.3s;
+    }
+
+    .fingerprint-animation.scanning .fingerprint-icon {
+        color: #3b82f6;
+        animation: scan-pulse 1.5s infinite;
+    }
+
+    .fingerprint-animation.success .fingerprint-icon {
+        color: #10b981;
+    }
+
+    .fingerprint-animation.error .fingerprint-icon {
+        color: #ef4444;
+    }
+
+    @keyframes scan-pulse {
+        0%, 100% {
+            transform: scale(1);
+            opacity: 1;
+        }
+        50% {
+            transform: scale(1.1);
+            opacity: 0.8;
+        }
+    }
+
+    .scan-rings {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        display: none;
+    }
+
+    .fingerprint-animation.scanning .scan-rings {
+        display: block;
+    }
+
+    .scan-ring {
+        position: absolute;
+        border: 2px solid #3b82f6;
+        border-radius: 50%;
+        animation: ring-expand 2s infinite;
+    }
+
+    .scan-ring:nth-child(1) {
+        animation-delay: 0s;
+    }
+
+    .scan-ring:nth-child(2) {
+        animation-delay: 0.5s;
+    }
+
+    .scan-ring:nth-child(3) {
+        animation-delay: 1s;
+    }
+
+    @keyframes ring-expand {
+        0% {
+            width: 100px;
+            height: 100px;
+            opacity: 1;
+        }
+        100% {
+            width: 250px;
+            height: 250px;
+            opacity: 0;
+        }
+    }
+
+    .status-message {
+        padding: 15px;
+        border-radius: 10px;
+        margin-top: 20px;
+        display: none;
+    }
+
+    .status-message.show {
+        display: block;
+    }
+
+    .status-message.scanning {
+        background: #dbeafe;
+        color: #1e40af;
+    }
+
+    .status-message.success {
+        background: #d1fae5;
+        color: #065f46;
+    }
+
+    .status-message.error {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
+    .progress-bar-container {
+        margin: 20px 0;
+        display: none;
+    }
+
+    .progress-bar-container.show {
+        display: block;
+    }
+
+    .attempts-counter {
+        background: #f9fafb;
+        padding: 15px;
+        border-radius: 10px;
+        margin-top: 20px;
+        text-align: center;
+    }
+
+    .scan-quality {
+        display: flex;
+        justify-content: center;
+        gap: 5px;
+        margin: 20px 0;
+    }
+
+    .quality-bar {
+        width: 30px;
+        height: 60px;
+        background: #e5e7eb;
+        border-radius: 3px;
+        transition: all 0.3s;
+    }
+
+    .quality-bar.active {
+        background: #10b981;
+    }
+
+    .quality-bar.good {
+        background: #3b82f6;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="container-fluid py-4">
-    <!-- Header -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div class="d-flex align-items-center">
-            <a href="{% url 'attendance:employee_detail' employee.id %}" class="btn btn-outline-secondary me-3">
-                <i class="fas fa-arrow-left"></i>
-            </a>
-            <div>
-                <h2 class="mb-0">Enroll Fingerprint</h2>
-                <nav aria-label="breadcrumb">
-                    <ol class="breadcrumb mb-0">
-                        <li class="breadcrumb-item"><a href="{% url 'attendance:dashboard' %}">Dashboard</a></li>
-                        <li class="breadcrumb-item"><a href="{% url 'attendance:employee_list' %}">Employees</a></li>
-                        <li class="breadcrumb-item"><a href="{% url 'attendance:employee_detail' employee.id %}">{{ employee.user.get_full_name }}</a></li>
-                        <li class="breadcrumb-item active">Enroll Fingerprint</li>
-                    </ol>
-                </nav>
+<div class="container py-5">
+    <div class="enrollment-container">
+        <!-- Employee Info -->
+        <div class="employee-info-card">
+            <img src="{% if employee.user.profile_image %}{{ employee.user.profile_image.url }}{% else %}{% static 'img/default-avatar.png' %}{% endif %}" 
+                 class="employee-avatar-large" 
+                 alt="{{ employee.user.get_full_name }}">
+            <h3>{{ employee.user.get_full_name }}</h3>
+            <p class="mb-2">{{ employee.position }} - {{ employee.department.name|default:"N/A" }}</p>
+            <span class="badge bg-light text-dark">{{ employee.user.employee_id }}</span>
+        </div>
+
+        <!-- Enrollment Steps -->
+        <div class="enrollment-steps">
+            <h5 class="mb-4"><i class="fas fa-list-ol"></i> Enrollment Process</h5>
+            
+            <div class="step" id="step-1">
+                <div class="step-number">1</div>
+                <div class="flex-grow-1">
+                    <h6 class="mb-1">Clean Your Finger</h6>
+                    <p class="text-muted mb-0 small">Make sure your finger is clean and dry for best results</p>
+                </div>
+            </div>
+
+            <div class="step" id="step-2">
+                <div class="step-number">2</div>
+                <div class="flex-grow-1">
+                    <h6 class="mb-1">Position Your Finger</h6>
+                    <p class="text-muted mb-0 small">Place your finger flat on the scanner surface</p>
+                </div>
+            </div>
+
+            <div class="step" id="step-3">
+                <div class="step-number">3</div>
+                <div class="flex-grow-1">
+                    <h6 class="mb-1">Scan Multiple Times</h6>
+                    <p class="text-muted mb-0 small">Lift and place your finger 3-5 times for accurate enrollment</p>
+                </div>
+            </div>
+
+            <div class="step" id="step-4">
+                <div class="step-number">4</div>
+                <div class="flex-grow-1">
+                    <h6 class="mb-1">Verification</h6>
+                    <p class="text-muted mb-0 small">Confirm your fingerprint is successfully enrolled</p>
+                </div>
             </div>
         </div>
-    </div>
 
-    <div class="row justify-content-center">
-        <div class="col-md-8 col-lg-6">
-            <div class="card">
-                <div class="card-header bg-white">
-                    <h5 class="mb-0">Fingerprint Enrollment</h5>
+        <!-- Scanner Area -->
+        <div class="scanner-area">
+            <div class="fingerprint-animation" id="fingerprint-animation">
+                <i class="fas fa-fingerprint fingerprint-icon"></i>
+                <div class="scan-rings">
+                    <div class="scan-ring"></div>
+                    <div class="scan-ring"></div>
+                    <div class="scan-ring"></div>
                 </div>
-                <div class="card-body">
-                    <!-- Employee Info -->
-                    <div class="text-center mb-4">
-                        <img src="{% if employee.user.profile_image %}{{ employee.user.profile_image.url }}{% else %}{% static 'img/default-avatar.png' %}{% endif %}" 
-                             class="rounded-circle mb-3" 
-                             width="80" height="80" 
-                             alt="{{ employee.user.get_full_name }}">
-                        <h5>{{ employee.user.get_full_name }}</h5>
-                        <p class="text-muted">{{ employee.user.employee_id }} • {{ employee.department.name|default:"No Department" }}</p>
-                    </div>
+            </div>
 
-                    <!-- Enrollment Status -->
-                    <div class="alert alert-info">
-                        <div class="d-flex align-items-center">
-                            <i class="fas fa-info-circle fa-2x me-3"></i>
-                            <div>
-                                <h6 class="alert-heading mb-1">Fingerprint Enrollment</h6>
-                                <p class="mb-0">
-                                    {% if employee.fingerprint_enrolled %}
-                                        Fingerprint is already enrolled. You can re-enroll to update the fingerprint data.
-                                    {% else %}
-                                        This employee has not enrolled their fingerprint yet.
-                                    {% endif %}
-                                </p>
-                            </div>
-                        </div>
-                    </div>
+            <h4 id="scanner-title">Ready to Enroll</h4>
+            <p class="text-muted" id="scanner-instruction">Click the button below to start fingerprint enrollment</p>
 
-                    <!-- Enrollment Instructions -->
-                    <div class="enrollment-instructions mb-4">
-                        <h6 class="mb-3">Enrollment Instructions:</h6>
-                        <ol class="list-group list-group-numbered">
-                            <li class="list-group-item border-0 px-0">Ensure the fingerprint scanner is connected and ready</li>
-                            <li class="list-group-item border-0 px-0">Ask the employee to place their finger on the scanner</li>
-                            <li class="list-group-item border-0 px-0">Press the "Start Enrollment" button below</li>
-                            <li class="list-group-item border-0 px-0">Follow the on-screen instructions for multiple scans</li>
-                            <li class="list-group-item border-0 px-0">Wait for the enrollment confirmation</li>
-                        </ol>
-                    </div>
+            <!-- Scan Quality Indicator -->
+            <div class="scan-quality" id="scan-quality" style="display: none;">
+                <div class="quality-bar"></div>
+                <div class="quality-bar"></div>
+                <div class="quality-bar"></div>
+                <div class="quality-bar"></div>
+                <div class="quality-bar"></div>
+            </div>
 
-                    <!-- Enrollment Form -->
-                    <form method="post" id="enrollmentForm">
-                        {% csrf_token %}
-                        
-                        <div class="scanner-interface text-center mb-4">
-                            <div class="scanner-placeholder bg-light rounded p-5 mb-3">
-                                <i class="fas fa-fingerprint fa-4x text-muted mb-3"></i>
-                                <p class="text-muted mb-0">Fingerprint Scanner Ready</p>
-                            </div>
-                            
-                            <!-- Hidden fingerprint data field (would be populated by scanner JS) -->
-                            <input type="hidden" name="fingerprint_data" id="fingerprintData">
-                            
-                            <div class="scanner-status alert alert-warning mb-3">
-                                <i class="fas fa-sync fa-spin me-2"></i>
-                                Waiting for fingerprint scan...
-                            </div>
-                        </div>
-
-                        <div class="d-grid gap-2">
-                            <button type="button" class="btn btn-primary btn-lg" id="startEnrollment">
-                                <i class="fas fa-play-circle me-2"></i>Start Enrollment
-                            </button>
-                            <a href="{% url 'attendance:employee_detail' employee.id %}" class="btn btn-outline-secondary">
-                                <i class="fas fa-times me-2"></i>Cancel
-                            </a>
-                        </div>
-                    </form>
-
-                    <!-- Demo Notice -->
-                    <div class="alert alert-warning mt-4">
-                        <i class="fas fa-exclamation-triangle me-2"></i>
-                        <strong>Demo Notice:</strong> This is a simulation. In a real implementation, 
-                        this would interface with a fingerprint scanner hardware.
+            <!-- Progress Bar -->
+            <div class="progress-bar-container" id="progress-container">
+                <label class="small text-muted mb-2">Enrollment Progress</label>
+                <div class="progress" style="height: 25px;">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                         id="enrollment-progress" 
+                         role="progressbar" 
+                         style="width: 0%">
+                        0%
                     </div>
                 </div>
             </div>
+
+            <!-- Status Message -->
+            <div class="status-message" id="status-message"></div>
+
+            <!-- Attempts Counter -->
+            <div class="attempts-counter" id="attempts-counter" style="display: none;">
+                <i class="fas fa-redo"></i> Scan Attempts: <strong id="scan-count">0</strong> / 5
+            </div>
+
+            <!-- Action Buttons -->
+            <form method="post" id="enrollment-form">
+                {% csrf_token %}
+                <input type="hidden" name="fingerprint_data" id="fingerprint-data">
+                
+                <div class="d-grid gap-2 mt-4">
+                    <button type="button" 
+                            class="btn btn-primary btn-lg" 
+                            id="start-scan-btn"
+                            onclick="startEnrollment()">
+                        <i class="fas fa-fingerprint"></i> Start Enrollment
+                    </button>
+                    
+                    <button type="submit" 
+                            class="btn btn-success btn-lg" 
+                            id="complete-btn"
+                            style="display: none;">
+                        <i class="fas fa-check"></i> Complete Enrollment
+                    </button>
+                    
+                    <button type="button" 
+                            class="btn btn-outline-secondary" 
+                            id="cancel-btn"
+                            onclick="cancelEnrollment()">
+                        <i class="fas fa-times"></i> Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Demo Notice -->
+        <div class="alert alert-warning">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            <strong>Demo Notice:</strong> This is a simulation interface. In production, this would integrate with actual fingerprint scanner hardware and SDK.
         </div>
     </div>
 </div>
+{% endblock %}
 
-<style>
-.card {
-    border: none;
-    box-shadow: 0 0 20px rgba(0,0,0,0.1);
-    border-radius: 15px;
-}
-
-.scanner-placeholder {
-    border: 2px dashed #dee2e6;
-    transition: all 0.3s;
-}
-
-.scanner-placeholder.active {
-    border-color: #0d6efd;
-    background-color: #f8f9fa;
-}
-
-.list-group-numbered {
-    background: none;
-}
-
-.btn {
-    border-radius: 10px;
-    padding: 12px 24px;
-    font-weight: 600;
-}
-</style>
-
+{% block extra_js %}
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const startBtn = document.getElementById('startEnrollment');
-    const scannerStatus = document.querySelector('.scanner-status');
-    const fingerprintData = document.getElementById('fingerprintData');
-    const enrollmentForm = document.getElementById('enrollmentForm');
-    const scannerPlaceholder = document.querySelector('.scanner-placeholder');
+let enrollmentActive = false;
+let scanAttempts = 0;
+let totalScans = 5;
+let enrollmentProgress = 0;
+let scanInterval;
 
-    startBtn.addEventListener('click', function() {
-        // Simulate fingerprint enrollment process
-        startBtn.disabled = true;
-        startBtn.innerHTML = '<i class="fas fa-sync fa-spin me-2"></i>Scanning...';
+function startEnrollment() {
+    if (enrollmentActive) return;
+    
+    enrollmentActive = true;
+    scanAttempts = 0;
+    enrollmentProgress = 0;
+    
+    // Update UI for scanning state
+    document.getElementById('start-scan-btn').style.display = 'none';
+    document.getElementById('progress-container').classList.add('show');
+    document.getElementById('attempts-counter').style.display = 'block';
+    document.getElementById('scan-quality').style.display = 'flex';
+    
+    // Update scanner appearance
+    const animation = document.getElementById('fingerprint-animation');
+    animation.classList.add('scanning');
+    
+    // Update titles and instructions
+    document.getElementById('scanner-title').textContent = 'Scanning Fingerprint';
+    document.getElementById('scanner-instruction').textContent = 'Place your finger on the scanner and lift after each scan';
+    
+    // Start the scanning simulation
+    startScanningProcess();
+}
+
+function startScanningProcess() {
+    scanInterval = setInterval(() => {
+        if (scanAttempts >= totalScans) {
+            completeEnrollment();
+            return;
+        }
         
-        scannerStatus.className = 'scanner-status alert alert-info mb-3';
-        scannerStatus.innerHTML = '<i class="fas fa-sync fa-spin me-2"></i>Please place your finger on the scanner...';
+        simulateScan();
+    }, 2000);
+}
+
+function simulateScan() {
+    scanAttempts++;
+    enrollmentProgress = (scanAttempts / totalScans) * 100;
+    
+    // Update progress bar
+    const progressBar = document.getElementById('enrollment-progress');
+    progressBar.style.width = `${enrollmentProgress}%`;
+    progressBar.textContent = `${Math.round(enrollmentProgress)}%`;
+    
+    // Update scan count
+    document.getElementById('scan-count').textContent = scanAttempts;
+    
+    // Update steps
+    updateSteps(scanAttempts);
+    
+    // Simulate scan quality
+    simulateScanQuality();
+    
+    // Show status message
+    showStatusMessage('scanning', `Scan ${scanAttempts} of ${totalScans} completed`);
+    
+    // Simulate random scan failure (10% chance)
+    if (Math.random() < 0.1 && scanAttempts < totalScans) {
+        setTimeout(() => {
+            showStatusMessage('error', 'Scan quality poor. Please try again.');
+            scanAttempts--; // Retry this scan
+            enrollmentProgress = (scanAttempts / totalScans) * 100;
+            progressBar.style.width = `${enrollmentProgress}%`;
+            progressBar.textContent = `${Math.round(enrollmentProgress)}%`;
+            document.getElementById('scan-count').textContent = scanAttempts;
+        }, 1000);
+    }
+}
+
+function simulateScanQuality() {
+    const qualityBars = document.querySelectorAll('.quality-bar');
+    qualityBars.forEach((bar, index) => {
+        // Reset all bars
+        bar.classList.remove('active', 'good');
         
-        scannerPlaceholder.classList.add('active');
-
-        // Simulate scanning process
-        setTimeout(() => {
-            scannerStatus.className = 'scanner-status alert alert-warning mb-3';
-            scannerStatus.innerHTML = '<i class="fas fa-sync fa-spin me-2"></i>Processing fingerprint data...';
-        }, 2000);
-
-        // Simulate successful enrollment
-        setTimeout(() => {
-            scannerStatus.className = 'scanner-status alert alert-success mb-3';
-            scannerStatus.innerHTML = '<i class="fas fa-check-circle me-2"></i>Fingerprint enrolled successfully!';
-            
-            // Generate mock fingerprint data
-            fingerprintData.value = 'mock_fingerprint_data_' + Date.now();
-            
-            // Auto-submit form after successful enrollment
-            setTimeout(() => {
-                enrollmentForm.submit();
-            }, 1000);
-            
-        }, 4000);
+        // Randomly activate bars based on scan attempt
+        if (index < scanAttempts) {
+            bar.classList.add('active');
+            if (index >= 3) {
+                bar.classList.add('good');
+            }
+        }
     });
+}
+
+function updateSteps(currentScan) {
+    const steps = document.querySelectorAll('.step');
+    
+    // Reset all steps
+    steps.forEach(step => {
+        step.classList.remove('active', 'completed');
+    });
+    
+    // Update steps based on progress
+    if (currentScan >= 1) {
+        document.getElementById('step-1').classList.add('completed');
+        document.getElementById('step-2').classList.add('active');
+    }
+    if (currentScan >= 2) {
+        document.getElementById('step-2').classList.add('completed');
+        document.getElementById('step-3').classList.add('active');
+    }
+    if (currentScan >= 4) {
+        document.getElementById('step-3').classList.add('completed');
+        document.getElementById('step-4').classList.add('active');
+    }
+}
+
+function showStatusMessage(type, message) {
+    const statusElement = document.getElementById('status-message');
+    statusElement.className = `status-message ${type} show`;
+    statusElement.innerHTML = `
+        <i class="fas fa-${getStatusIcon(type)} me-2"></i>
+        ${message}
+    `;
+    
+    // Auto-hide success messages after 2 seconds
+    if (type === 'success') {
+        setTimeout(() => {
+            statusElement.classList.remove('show');
+        }, 2000);
+    }
+}
+
+function getStatusIcon(type) {
+    const icons = {
+        'scanning': 'sync fa-spin',
+        'success': 'check-circle',
+        'error': 'exclamation-triangle'
+    };
+    return icons[type] || 'info-circle';
+}
+
+function completeEnrollment() {
+    clearInterval(scanInterval);
+    
+    // Update UI for completion
+    const animation = document.getElementById('fingerprint-animation');
+    animation.classList.remove('scanning');
+    animation.classList.add('success');
+    
+    document.getElementById('scanner-title').textContent = 'Enrollment Complete!';
+    document.getElementById('scanner-instruction').textContent = 'Fingerprint successfully enrolled and stored';
+    
+    // Show success message
+    showStatusMessage('success', 'Fingerprint enrollment completed successfully!');
+    
+    // Generate mock fingerprint data
+    const fingerprintData = `fingerprint_template_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    document.getElementById('fingerprint-data').value = fingerprintData;
+    
+    // Show complete button
+    document.getElementById('complete-btn').style.display = 'block';
+    document.getElementById('cancel-btn').style.display = 'none';
+    
+    // Mark all steps as completed
+    document.querySelectorAll('.step').forEach(step => {
+        step.classList.add('completed');
+        step.classList.remove('active');
+    });
+    
+    enrollmentActive = false;
+}
+
+function cancelEnrollment() {
+    if (enrollmentActive) {
+        clearInterval(scanInterval);
+        enrollmentActive = false;
+    }
+    
+    // Reset UI
+    resetEnrollmentUI();
+    
+    // Redirect back to employee detail page
+    window.location.href = "{% url 'attendance:employee_detail' employee.id %}";
+}
+
+function resetEnrollmentUI() {
+    const animation = document.getElementById('fingerprint-animation');
+    animation.classList.remove('scanning', 'success', 'error');
+    
+    document.getElementById('start-scan-btn').style.display = 'block';
+    document.getElementById('complete-btn').style.display = 'none';
+    document.getElementById('cancel-btn').style.display = 'block';
+    document.getElementById('progress-container').classList.remove('show');
+    document.getElementById('attempts-counter').style.display = 'none';
+    document.getElementById('scan-quality').style.display = 'none';
+    document.getElementById('status-message').classList.remove('show');
+    
+    document.getElementById('scanner-title').textContent = 'Ready to Enroll';
+    document.getElementById('scanner-instruction').textContent = 'Click the button below to start fingerprint enrollment';
+    
+    // Reset progress bar
+    const progressBar = document.getElementById('enrollment-progress');
+    progressBar.style.width = '0%';
+    progressBar.textContent = '0%';
+    
+    // Reset steps
+    document.querySelectorAll('.step').forEach(step => {
+        step.classList.remove('active', 'completed');
+    });
+    
+    // Reset quality bars
+    document.querySelectorAll('.quality-bar').forEach(bar => {
+        bar.classList.remove('active', 'good');
+    });
+}
+
+// Handle form submission
+document.getElementById('enrollment-form').addEventListener('submit', function(e) {
+    const fingerprintData = document.getElementById('fingerprint-data').value;
+    if (!fingerprintData) {
+        e.preventDefault();
+        showStatusMessage('error', 'No fingerprint data captured. Please complete the enrollment process.');
+        return false;
+    }
+    
+    // Show loading state
+    const completeBtn = document.getElementById('complete-btn');
+    completeBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+    completeBtn.disabled = true;
+});
+
+// Prevent accidental page leave during enrollment
+window.addEventListener('beforeunload', function(e) {
+    if (enrollmentActive) {
+        e.preventDefault();
+        e.returnValue = 'You are currently in the middle of fingerprint enrollment. Are you sure you want to leave?';
+        return e.returnValue;
+    }
 });
 </script>
 {% endblock %}
