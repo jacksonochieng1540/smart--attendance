@@ -37,20 +37,19 @@ class CustomUserCreationForm(UserCreationForm):
             'placeholder': 'Phone Number'
         })
     )
-    employee_id = forms.CharField(
-        max_length=20,
-        required=True,
-        widget=forms.TextInput(attrs={
-            'class': 'form-control',
-            'placeholder': 'Employee ID'
-        })
-    )
     position = forms.CharField(
         max_length=100,
         required=True,
         widget=forms.TextInput(attrs={
             'class': 'form-control',
             'placeholder': 'Position/Job Title'
+        })
+    )
+    department = forms.ModelChoiceField(
+        queryset=Department.objects.all(),
+        required=True,
+        widget=forms.Select(attrs={
+            'class': 'form-control'
         })
     )
 
@@ -125,9 +124,18 @@ class CustomPasswordChangeForm(PasswordChangeForm):
 
 class UserUpdateForm(forms.ModelForm):
     """Form for updating user information"""
+    phone = forms.CharField(
+        max_length=15,
+        required=False,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Phone Number'
+        })
+    )
+
     class Meta:
         model = User
-        fields = ['first_name', 'last_name', 'email']
+        fields = ['first_name', 'last_name', 'email', 'phone']
         widgets = {
             'first_name': forms.TextInput(attrs={'class': 'form-control'}),
             'last_name': forms.TextInput(attrs={'class': 'form-control'}),
@@ -138,12 +146,10 @@ class EmployeeUpdateForm(forms.ModelForm):
     """Form for updating employee profile"""
     class Meta:
         model = Employee
-        fields = ['phone_number', 'department', 'position', 'employee_id']
+        fields = ['department', 'position']
         widgets = {
-            'phone_number': forms.TextInput(attrs={'class': 'form-control'}),
             'department': forms.Select(attrs={'class': 'form-control'}),
             'position': forms.TextInput(attrs={'class': 'form-control'}),
-            'employee_id': forms.TextInput(attrs={'class': 'form-control'}),
         }
 
 class EmployeeForm(forms.ModelForm):
@@ -163,6 +169,11 @@ class EmployeeForm(forms.ModelForm):
         max_length=150,
         widget=forms.TextInput(attrs={'class': 'form-control'})
     )
+    phone = forms.CharField(
+        max_length=15,
+        required=False,
+        widget=forms.TextInput(attrs={'class': 'form-control'})
+    )
     password = forms.CharField(
         required=False,
         widget=forms.PasswordInput(attrs={'class': 'form-control'}),
@@ -171,12 +182,10 @@ class EmployeeForm(forms.ModelForm):
 
     class Meta:
         model = Employee
-        fields = ['department', 'position', 'employee_id', 'phone_number']
+        fields = ['department', 'position']
         widgets = {
             'department': forms.Select(attrs={'class': 'form-control'}),
             'position': forms.TextInput(attrs={'class': 'form-control'}),
-            'employee_id': forms.TextInput(attrs={'class': 'form-control'}),
-            'phone_number': forms.TextInput(attrs={'class': 'form-control'}),
         }
 
     def __init__(self, *args, **kwargs):
@@ -186,6 +195,7 @@ class EmployeeForm(forms.ModelForm):
             self.fields['last_name'].initial = self.instance.user.last_name
             self.fields['email'].initial = self.instance.user.email
             self.fields['username'].initial = self.instance.user.username
+            self.fields['phone'].initial = self.instance.user.phone
             self.fields['password'].required = False
 
     def save(self, commit=True):
@@ -200,6 +210,8 @@ class EmployeeForm(forms.ModelForm):
                 last_name=self.cleaned_data['last_name'],
                 password=self.cleaned_data['password'] or 'defaultpassword123'
             )
+            user.phone = self.cleaned_data['phone']
+            user.save()
             employee.user = user
         else:
             # Update existing user
@@ -208,6 +220,7 @@ class EmployeeForm(forms.ModelForm):
             user.last_name = self.cleaned_data['last_name']
             user.email = self.cleaned_data['email']
             user.username = self.cleaned_data['username']
+            user.phone = self.cleaned_data['phone']
             
             if self.cleaned_data['password']:
                 user.set_password(self.cleaned_data['password'])
@@ -323,58 +336,5 @@ class DepartmentForm(forms.ModelForm):
                 'class': 'form-control',
                 'rows': 3,
                 'placeholder': 'Department description...'
-            }),
-        }
-
-class PasswordResetRequestForm(forms.Form):
-    """Form for password reset request"""
-    email = forms.EmailField(
-        widget=forms.EmailInput(attrs={
-            'class': 'form-control',
-            'placeholder': 'Enter your email address'
-        })
-    )
-
-class ProfilePictureForm(forms.ModelForm):
-    """Form for updating profile picture"""
-    class Meta:
-        model = Employee
-        fields = ['profile_picture']
-        widgets = {
-            'profile_picture': forms.FileInput(attrs={
-                'class': 'form-control',
-                'accept': 'image/*'
-            })
-        }
-
-class BulkEmployeeUploadForm(forms.Form):
-    """Form for bulk employee upload via CSV"""
-    csv_file = forms.FileField(
-        widget=forms.FileInput(attrs={
-            'class': 'form-control',
-            'accept': '.csv'
-        }),
-        help_text="Upload a CSV file with columns: first_name, last_name, email, username, employee_id, department, position"
-    )
-
-class AttendanceSettingsForm(forms.ModelForm):
-    """Form for attendance settings"""
-    class Meta:
-        model = Employee  # This should be your settings model
-        fields = ['working_hours_start', 'working_hours_end', 'late_threshold']
-        widgets = {
-            'working_hours_start': forms.TimeInput(attrs={
-                'class': 'form-control',
-                'type': 'time'
-            }),
-            'working_hours_end': forms.TimeInput(attrs={
-                'class': 'form-control',
-                'type': 'time'
-            }),
-            'late_threshold': forms.NumberInput(attrs={
-                'class': 'form-control',
-                'min': 1,
-                'max': 120,
-                'step': 1
             }),
         }
