@@ -6,7 +6,7 @@ from django.db.models import Count, Q, Avg
 from django.http import JsonResponse
 from datetime import datetime, timedelta
 from .models import Employee, AttendanceRecord, Department, LeaveRequest, AttendanceSettings
-from .forms import CheckInForm, CheckOutForm, EmployeeForm, LeaveRequestForm, PasswordChangeForm, CustomUserCreationForm,EmployeeUpdateForm
+from .forms import CheckInForm, CheckOutForm, EmployeeForm,PasswordChangeForm,LeaveRequestForm, CustomPasswordChangeForm, CustomUserCreationForm,EmployeeUpdateForm,UserUpdateForm
 from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth import login, authenticate
 from django.contrib.auth.forms import UserCreationForm
@@ -385,3 +385,121 @@ def enroll_fingerprint(request, pk):
     
     context = {'employee': employee}
     return render(request, 'attendance/enroll_fingerprint.html', context)
+
+
+@login_required
+def leave_request(request):
+    """Handle leave requests"""
+    if request.method == 'POST':
+        form = LeaveRequestForm(request.POST)
+        if form.is_valid():
+            leave_request = form.save(commit=False)
+            # Get the employee profile for the current user
+            try:
+                employee = Employee.objects.get(user=request.user)
+                leave_request.employee = employee
+                leave_request.save()
+                messages.success(request, 'Leave request submitted successfully!')
+                return redirect('attendance:dashboard')
+            except Employee.DoesNotExist:
+                messages.error(request, 'Employee profile not found!')
+        else:
+            messages.error(request, 'Please correct the errors below.')
+    else:
+        form = LeaveRequestForm()
+    
+    return render(request, 'attendance/leave_request.html', {'form': form})
+
+@login_required
+def pending_leave_requests(request):
+    """View pending leave requests (for managers/admins)"""
+    if not request.user.is_staff and request.user.role != 'admin':
+        messages.error(request, 'You do not have permission to view this page.')
+        return redirect('attendance:dashboard')
+    
+    pending_requests = LeaveRequest.objects.filter(status='pending').select_related(
+        'employee__user', 'employee__department'
+    )
+    
+    context = {
+        'pending_requests': pending_requests,
+    }
+    return render(request, 'attendance/pending_leave_requests.html', context)
+
+@login_required
+def approve_leave_request(request, pk):
+    """Approve a leave request"""
+    if not request.user.is_staff and request.user.role != 'admin':
+        messages.error(request, 'You do not have permission to perform this action.')
+        return redirect('attendance:dashboard')
+    
+    leave_request = get_object_or_404(LeaveRequest, pk=pk)
+    leave_request.status = 'approved'
+    leave_request.approved_by = request.user
+    leave_request.save()
+    
+    messages.success(request, f'Leave request for {leave_request.employee.user.get_full_name()} has been approved.')
+    return redirect('attendance:pending_leave_requests')
+
+@login_required
+def reject_leave_request(request, pk):
+    """Reject a leave request"""
+    if not request.user.is_staff and request.user.role != 'admin':
+        messages.error(request, 'You do not have permission to perform this action.')
+        return redirect('attendance:dashboard')
+    
+    leave_request = get_object_or_404(LeaveRequest, pk=pk)
+    leave_request.status = 'rejected'
+    leave_request.approved_by = request.user
+    leave_request.save()
+    
+    messages.success(request, f'Leave request for {leave_request.employee.user.get_full_name()} has been rejected.')
+    return redirect('attendance:pending_leave_requests')
+
+@login_required
+def profile(request):
+    """User profile view"""
+    try:
+        employee = Employee.objects.get(user=request.user)
+    except Employee.DoesNotExist:
+        messages.error(request, 'Employee profile not found!')
+        return redirect('attendance:dashboard')
+    
+    if request.method == 'POST':
+        user_form = UserUpdateForm(request.POST, instance=request.user)
+        employee_form = EmployeeUpdateForm(request.POST, instance=employee)
+        
+        if user_form.is_valid() and employee_form.is_valid():
+            user_form.save()
+            employee_form.save()
+            messages.success(request, 'Profile updated successfully!')
+            return redirect('attendance:profile')
+    else:
+        user_form = UserUpdateForm(instance=request.user)
+        employee_form = EmployeeUpdateForm(instance=employee)
+    
+    context = {
+        'user_form': user_form,
+        'employee_form': employee_form,
+        'employee': employee,
+    }
+    
+    return render(request, 'attendance/profile.html', context)
+
+@login_required
+def change_password(request):
+    """Change password view"""
+    if request.method == 'POST':
+        form = CustomPasswordChangeForm(request.user, request.POST)
+        if form.is_valid():
+            user = form.save()
+            from django.contrib.auth import update_session_auth_hash
+            update_session_auth_hash(request, user)  # Important!
+            messages.success(request, 'Your password was successfully updated!')
+            return redirect('attendance:profile')
+        else:
+            messages.error(request, 'Please correct the error below.')
+    else:
+        form = CustomPasswordChangeForm(request.user)
+    
+    return render(request, 'attendance/change_password.html', {'form': form})
