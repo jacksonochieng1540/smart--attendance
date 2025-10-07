@@ -29,6 +29,7 @@ def register(request):
                     phone_number=form.cleaned_data.get('phone', ''),
                     employee_id=form.cleaned_data['employee_id'],
                     position=form.cleaned_data['position'],
+                    department_id=form.cleaned_data['department'],
                     is_active=True
                 )
                 

@@ -64,15 +64,11 @@
             margin: 0;
         }
 
-        .form-floating {
-            margin-bottom: 20px;
-        }
-
         .form-control {
             border-radius: 10px;
             border: 2px solid #e5e7eb;
             padding: 12px 15px;
-            height: auto;
+            margin-bottom: 15px;
         }
 
         .form-control:focus {
@@ -80,12 +76,8 @@
             box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
         }
 
-        .form-floating > label {
-            padding: 1rem 15px;
-        }
-
         .input-group {
-            margin-bottom: 20px;
+            margin-bottom: 15px;
         }
 
         .input-group-text {
@@ -98,6 +90,7 @@
         .input-group .form-control {
             border-left: none;
             border-radius: 0 10px 10px 0;
+            margin-bottom: 0;
         }
 
         .password-toggle {
@@ -120,6 +113,7 @@
             color: white;
             width: 100%;
             transition: all 0.3s;
+            margin-bottom: 20px;
         }
 
         .btn-login:hover {
@@ -186,11 +180,18 @@
             padding: 12px;
             background: white;
             transition: all 0.3s;
+            color: #6b7280;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
         }
 
         .btn-alt:hover {
             border-color: #667eea;
             background: #f9fafb;
+            color: #667eea;
         }
 
         .register-link {
@@ -233,6 +234,17 @@
         .feature-item i {
             color: #667eea;
         }
+
+        .error-message {
+            color: #dc3545;
+            font-size: 0.875rem;
+            margin-top: -10px;
+            margin-bottom: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
     </style>
 </head>
 <body>
@@ -257,37 +269,67 @@
                 {% endfor %}
             {% endif %}
 
+            <!-- Form Errors -->
+            {% if form.errors %}
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <strong>Login failed!</strong> Please check your username and password.
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endif %}
+
             <!-- Login Form -->
-            <form method="post">
+            <form method="post" novalidate>
                 {% csrf_token %}
                 
-                <div class="input-group">
-                    <span class="input-group-text">
-                        <i class="fas fa-user"></i>
-                    </span>
-                    <input type="text" 
-                           class="form-control" 
-                           name="username" 
-                           placeholder="Username or Employee ID" 
-                           required 
-                           autofocus>
+                <!-- Username Field -->
+                <div class="form-group">
+                    <div class="input-group">
+                        <span class="input-group-text">
+                            <i class="fas fa-user"></i>
+                        </span>
+                        <input type="text" 
+                               class="form-control {% if form.username.errors %}is-invalid{% endif %}" 
+                               name="username" 
+                               placeholder="Username" 
+                               value="{{ form.username.value|default:'' }}"
+                               required 
+                               autofocus>
+                    </div>
+                    {% if form.username.errors %}
+                        <div class="error-message">
+                            {% for error in form.username.errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
                 </div>
 
-                <div class="input-group position-relative">
-                    <span class="input-group-text">
-                        <i class="fas fa-lock"></i>
-                    </span>
-                    <input type="password" 
-                           class="form-control" 
-                           id="password" 
-                           name="password" 
-                           placeholder="Password" 
-                           required>
-                    <i class="fas fa-eye password-toggle" 
-                       id="togglePassword" 
-                       onclick="togglePassword()"></i>
+                <!-- Password Field -->
+                <div class="form-group">
+                    <div class="input-group position-relative">
+                        <span class="input-group-text">
+                            <i class="fas fa-lock"></i>
+                        </span>
+                        <input type="password" 
+                               class="form-control {% if form.password.errors %}is-invalid{% endif %}" 
+                               id="password" 
+                               name="password" 
+                               placeholder="Password" 
+                               required>
+                        <i class="fas fa-eye password-toggle" 
+                           id="togglePassword" 
+                           onclick="togglePassword()"></i>
+                    </div>
+                    {% if form.password.errors %}
+                        <div class="error-message">
+                            {% for error in form.password.errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
                 </div>
 
+                <!-- Remember Me & Forgot Password -->
                 <div class="remember-forgot">
                     <div class="form-check">
                         <input class="form-check-input" 
@@ -314,12 +356,12 @@
             </div>
 
             <div class="alternative-login">
-                <button type="button" class="btn btn-alt" onclick="qrLogin()">
-                    <i class="fas fa-qrcode me-2"></i>QR Code
-                </button>
-                <button type="button" class="btn btn-alt" onclick="fingerprintLogin()">
-                    <i class="fas fa-fingerprint me-2"></i>Fingerprint
-                </button>
+                <a href="{% url 'attendance:check_in_qr' %}" class="btn btn-alt">
+                    <i class="fas fa-qrcode"></i>QR Code
+                </a>
+                <a href="{% url 'attendance:check_in_fingerprint' %}" class="btn btn-alt">
+                    <i class="fas fa-fingerprint"></i>Fingerprint
+                </a>
             </div>
 
             <!-- Features -->
@@ -350,7 +392,7 @@
 
         <!-- Copyright -->
         <div class="text-center mt-4 text-white">
-            <small>&copy; 2024 Attendance System. All rights reserved.</small>
+            <small>&copy; 2025 Attendance System. All rights reserved.</small>
         </div>
     </div>
 
@@ -371,14 +413,6 @@
             }
         }
 
-        function qrLogin() {
-            window.location.href = "{% url 'attendance:check_in_qr' %}";
-        }
-
-        function fingerprintLogin() {
-            window.location.href = "{% url 'attendance:check_in_fingerprint' %}";
-        }
-
         // Auto-dismiss alerts
         setTimeout(function() {
             const alerts = document.querySelectorAll('.alert');
@@ -387,6 +421,14 @@
                 bsAlert.close();
             });
         }, 5000);
+
+        // Focus on username field on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            const usernameField = document.querySelector('input[name="username"]');
+            if (usernameField) {
+                usernameField.focus();
+            }
+        });
     </script>
 </body>
 </html>
