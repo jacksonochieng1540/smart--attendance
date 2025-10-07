@@ -4,6 +4,9 @@ from . import views
 app_name = 'attendance'
 
 urlpatterns = [
+    
+    path('register/', views.register, name='register'),
+
     # Dashboard
     path('', views.dashboard, name='dashboard'),
     
