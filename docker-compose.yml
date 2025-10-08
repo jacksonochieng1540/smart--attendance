@@ -13,6 +13,8 @@ services:
     ports:
       - "5432:5432"
     restart: unless-stopped
+    networks:
+      - attendance_network
 
   web:
     build: .
@@ -34,6 +36,14 @@ services:
     depends_on:
       - db
     restart: unless-stopped
+    networks:
+      - attendance_network
 
 volumes:
   postgres_data:
+
+networks:
+  attendance_network:
+    driver: bridge
+    driver_opts:
+      com.docker.network.enable_ipv6: "false"
