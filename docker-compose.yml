@@ -8,143 +8,35 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     environment:
-      - POSTGRES_DB=${DB_NAME:-attendance_db}
-      - POSTGRES_USER=${DB_USER:-postgres}
-      - POSTGRES_PASSWORD=${DB_PASSWORD:-postgres}
+      - POSTGRES_DB=attendance_db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=9320vanity
     ports:
       - "5432:5432"
-    networks:
-      - attendance_network
     restart: unless-stopped
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  # Redis Cache (optional)
-  redis:
-    image: redis:7-alpine
-    container_name: attendance_redis
-    ports:
-      - "6379:6379"
-    networks:
-      - attendance_network
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
 
   # Django Application
   web:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    build: .
     container_name: attendance_web
-    command: >
-      sh -c "python manage.py migrate &&
-             python manage.py collectstatic --noinput &&
-             gunicorn project.wsgi:application --bind 0.0.0.0:8000 --workers 4"
+    command: python manage.py runserver 0.0.0.0:8000
     volumes:
       - .:/app
-      - static_volume:/app/staticfiles
-      - media_volume:/app/media
     ports:
       - "8000:8000"
     environment:
-      - DEBUG=${DEBUG:-False}
-      - SECRET_KEY=${SECRET_KEY:-your-secret-key-here}
-      - DATABASE_URL=postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@db:5432/${DB_NAME:-attendance_db}
-      - ALLOWED_HOSTS=${ALLOWED_HOSTS:-localhost,127.0.0.1}
-      - REDIS_URL=redis://redis:6379/0
-    depends_on:
-      db:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    networks:
-      - attendance_network
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health/"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-
-  # Nginx Reverse Proxy
-  nginx:
-    image: nginx:alpine
-    container_name: attendance_nginx
-    volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./nginx/conf.d:/etc/nginx/conf.d:ro
-      - static_volume:/app/staticfiles:ro
-      - media_volume:/app/media:ro
-      - ./nginx/ssl:/etc/nginx/ssl:ro
-    ports:
-      - "80:80"
-      - "443:443"
-    depends_on:
-      - web
-    networks:
-      - attendance_network
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/health/"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
-  # Celery Worker (optional - for background tasks)
-  celery:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: attendance_celery
-    command: celery -A project worker -l info
-    volumes:
-      - .:/app
-    environment:
-      - DEBUG=${DEBUG:-False}
-      - SECRET_KEY=${SECRET_KEY:-your-secret-key-here}
-      - DATABASE_URL=postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@db:5432/${DB_NAME:-attendance_db}
-      - REDIS_URL=redis://redis:6379/0
+      - DEBUG=True
+      - SECRET_KEY=django-insecure-)l+(1x!g!13y1zxoq5!npyyx36nfby++4sp+&437%0&0tzs0#i
+      - ALLOWED_HOSTS=localhost,127.0.0.1,0.0.0.0
+      - USE_POSTGRES=True
+      - DB_NAME=attendance_db
+      - DB_USER=postgres
+      - DB_PASSWORD=9320vanity
+      - DB_HOST=db
+      - DB_PORT=5432
     depends_on:
       - db
-      - redis
-    networks:
-      - attendance_network
     restart: unless-stopped
-
-  # Celery Beat (optional - for scheduled tasks)
-  celery-beat:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: attendance_celery_beat
-    command: celery -A project beat -l info
-    volumes:
-      - .:/app
-    environment:
-      - DEBUG=${DEBUG:-False}
-      - SECRET_KEY=${SECRET_KEY:-your-secret-key-here}
-      - DATABASE_URL=postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@db:5432/${DB_NAME:-attendance_db}
-      - REDIS_URL=redis://redis:6379/0
-    depends_on:
-      - db
-      - redis
-    networks:
-      - attendance_network
-    restart: unless-stopped
-
-networks:
-  attendance_network:
-    driver: bridge
 
 volumes:
   postgres_data:
-  static_volume:
-  media_volume:
