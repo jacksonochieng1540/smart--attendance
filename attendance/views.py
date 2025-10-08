@@ -171,22 +171,30 @@ def employee_detail(request, pk):
     """Employee detail view"""
     employee = get_object_or_404(Employee, pk=pk)
     
-    
+    # Get recent attendance records for display
     attendance_history = AttendanceRecord.objects.filter(
         employee=employee
-    ).order_by('-date')[:30]
+    ).select_related('employee__user').order_by('-date')[:30]
     
- 
-    total_days = attendance_history.count()
-    present_days = attendance_history.filter(status='present').count()
-    late_days = attendance_history.filter(status='late').count()
+    # Get statistics using database aggregation (most efficient)
+    from django.db.models import Count, Q
+    
+    stats = AttendanceRecord.objects.filter(
+        employee=employee
+    ).aggregate(
+        total_days=Count('id'),
+        present_days=Count('id', filter=Q(status='present')),
+        late_days=Count('id', filter=Q(status='late')),
+        absent_days=Count('id', filter=Q(status='absent'))
+    )
     
     context = {
         'employee': employee,
         'attendance_history': attendance_history,
-        'total_days': total_days,
-        'present_days': present_days,
-        'late_days': late_days,
+        'total_days': stats['total_days'],
+        'present_days': stats['present_days'],
+        'late_days': stats['late_days'],
+        'absent_days': stats['absent_days'],
     }
     
     return render(request, 'attendance/employee_detail.html', context)
