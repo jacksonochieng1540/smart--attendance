@@ -176,8 +176,8 @@ def employee_detail(request, pk):
         employee=employee
     ).select_related('employee__user').order_by('-date')[:30]
     
-    # Get statistics using database aggregation (most efficient)
-    from django.db.models import Count, Q
+    # Get statistics using database aggregation
+    from django.db.models import Count, Q, Avg, Sum
     
     stats = AttendanceRecord.objects.filter(
         employee=employee
@@ -185,16 +185,34 @@ def employee_detail(request, pk):
         total_days=Count('id'),
         present_days=Count('id', filter=Q(status='present')),
         late_days=Count('id', filter=Q(status='late')),
-        absent_days=Count('id', filter=Q(status='absent'))
+        absent_days=Count('id', filter=Q(status='absent')),
+        avg_hours=Avg('working_hours'),
+        total_hours=Sum('working_hours')
     )
+    
+    # Calculate values
+    total_days = stats['total_days'] or 0
+    present_days = stats['present_days'] or 0
+    late_days = stats['late_days'] or 0
+    absent_days = stats['absent_days'] or 0
+    
+    # Calculate percentages
+    present_percentage = (present_days / total_days * 100) if total_days > 0 else 0
+    late_percentage = (late_days / total_days * 100) if total_days > 0 else 0
+    absent_percentage = (absent_days / total_days * 100) if total_days > 0 else 0
     
     context = {
         'employee': employee,
         'attendance_history': attendance_history,
-        'total_days': stats['total_days'],
-        'present_days': stats['present_days'],
-        'late_days': stats['late_days'],
-        'absent_days': stats['absent_days'],
+        'total_days': total_days,
+        'present_days': present_days,
+        'late_days': late_days,
+        'absent_days': absent_days,
+        'present_percentage': round(present_percentage, 1),
+        'late_percentage': round(late_percentage, 1),
+        'absent_percentage': round(absent_percentage, 1),
+        'avg_hours': round(stats['avg_hours'] or 0, 2),
+        'total_hours': round(stats['total_hours'] or 0, 2),
     }
     
     return render(request, 'attendance/employee_detail.html', context)
