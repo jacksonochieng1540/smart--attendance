@@ -205,7 +205,7 @@
             <div class="stat-box">
                 <h3 class="text-info">
                     {% if total_days > 0 %}
-                        {{ present_days|add:late_days|floatformat:0|add:""|mul:100|div:total_days|floatformat:1 }}%
+                        {{ attendance_rate|floatformat:1 }}%
                     {% else %}
                         0%
                     {% endif %}
@@ -380,14 +380,14 @@
                             <span>Attendance Rate</span>
                             <span class="fw-bold">
                                 {% if total_days > 0 %}
-                                    {% widthratio present_days total_days 100 %}%
+                                    {{ attendance_rate|floatformat:1 }}%
                                 {% else %}
                                     0%
                                 {% endif %}
                             </span>
                         </div>
                         <div class="progress">
-                            <div class="progress-bar bg-success" style="width: {% if total_days > 0 %}{% widthratio present_days total_days 100 %}{% else %}0{% endif %}%"></div>
+                            <div class="progress-bar bg-success" style="width: {% if total_days > 0 %}{{ attendance_rate }}{% else %}0{% endif %}%"></div>
                         </div>
                     </div>
                     
@@ -395,15 +395,15 @@
                         <div class="d-flex justify-content-between mb-1">
                             <span>Punctuality</span>
                             <span class="fw-bold">
-                                {% if present_days|add:late_days > 0 %}
-                                    {% widthratio present_days present_days|add:late_days 100 %}%
+                                {% if punctuality_rate %}
+                                    {{ punctuality_rate|floatformat:1 }}%
                                 {% else %}
                                     0%
                                 {% endif %}
                             </span>
                         </div>
                         <div class="progress">
-                            <div class="progress-bar bg-info" style="width: {% if present_days|add:late_days > 0 %}{% widthratio present_days present_days|add:late_days 100 %}{% else %}0{% endif %}%"></div>
+                            <div class="progress-bar bg-info" style="width: {% if punctuality_rate %}{{ punctuality_rate }}{% else %}0{% endif %}%"></div>
                         </div>
                     </div>
 
@@ -419,7 +419,7 @@
                     </div>
                     <div class="d-flex justify-content-between">
                         <span><i class="fas fa-calendar-times text-danger"></i> Absent Days</span>
-                        <span class="fw-bold">{{ total_days|add:present_days|add:late_days|mul:-1|add:total_days }}</span>
+                        <span class="fw-bold">{{ absent_days }}</span>
                     </div>
                 </div>
             </div>
