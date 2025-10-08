@@ -2,23 +2,18 @@ version: '3.8'
 
 services:
   db:
-    image: postgres:15-alpine
-    container_name: attendance_db
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
+    image: postgres:15
     environment:
       POSTGRES_DB: attendance_db
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: 9320vanity
     ports:
       - "5432:5432"
-    restart: unless-stopped
-    networks:
-      - attendance_network
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
 
   web:
     build: .
-    container_name: attendance_web
     command: python manage.py runserver 0.0.0.0:8000
     volumes:
       - .:/app
@@ -35,15 +30,6 @@ services:
       DB_PORT: "5432"
     depends_on:
       - db
-    restart: unless-stopped
-    networks:
-      - attendance_network
 
 volumes:
   postgres_data:
-
-networks:
-  attendance_network:
-    driver: bridge
-    driver_opts:
-      com.docker.network.enable_ipv6: "false"
