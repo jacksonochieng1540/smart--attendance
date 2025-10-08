@@ -1,42 +1,64 @@
-version: '3.8'
+name: Django CI
 
-services:
-  # PostgreSQL Database
-  db:
-    image: postgres:15-alpine
-    container_name: attendance_db
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    environment:
-      - POSTGRES_DB=attendance_db
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=9320vanity
-    ports:
-      - "5432:5432"
-    restart: unless-stopped
+on:
+  push:
+    branches: [ main, master, develop ]
+  pull_request:
+    branches: [ main, master ]
 
-  # Django Application
-  web:
-    build: .
-    container_name: attendance_web
-    command: python manage.py runserver 0.0.0.0:8000
-    volumes:
-      - .:/app
-    ports:
-      - "8000:8000"
-    environment:
-      - DEBUG=True
-      - SECRET_KEY=django-insecure-)l+(1x!g!13y1zxoq5!npyyx36nfby++4sp+&437%0&0tzs0#i
-      - ALLOWED_HOSTS=localhost,127.0.0.1,0.0.0.0
-      - USE_POSTGRES=True
-      - DB_NAME=attendance_db
-      - DB_USER=postgres
-      - DB_PASSWORD=9320vanity
-      - DB_HOST=db
-      - DB_PORT=5432
-    depends_on:
-      - db
-    restart: unless-stopped
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
 
-volumes:
-  postgres_data:
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Run tests with SQLite
+      run: |
+        python manage.py test
+      env:
+        DEBUG: True
+        SECRET_KEY: test-secret-key-for-ci
+        USE_POSTGRES: False
+
+    - name: Lint code
+      run: |
+        pip install flake8
+        flake8 .
+
+  security:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install safety bandit
+
+    - name: Check for security vulnerabilities
+      run: |
+        safety check
+
+    - name: Run bandit security linter
+      run: |
+        bandit -r attendance/
