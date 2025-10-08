@@ -12,6 +12,9 @@
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>👤</text></svg>">
+    
     <!-- Custom CSS -->
     <style>
         :root {
@@ -128,6 +131,36 @@
             border-left-color: #F59E0B;
         }
 
+        /* Logout Form Styles */
+        .logout-form {
+            display: block;
+            width: 100%;
+        }
+
+        .logout-btn {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            padding: 12px 20px;
+            background: none;
+            border: none;
+            color: rgba(255,255,255,0.8);
+            text-decoration: none;
+            transition: all 0.3s;
+            text-align: left;
+            cursor: pointer;
+        }
+
+        .logout-btn:hover {
+            background-color: rgba(255,255,255,0.1);
+            color: white;
+        }
+
+        .logout-btn i {
+            width: 25px;
+            margin-right: 10px;
+        }
+
         @media (max-width: 768px) {
             .sidebar {
                 transform: translateX(-100%);
@@ -188,7 +221,7 @@
                 </a>
             </li>
             <li>
-                <a href="{% url 'attendance:attendance_records' %}" class="{% if request.resolver_match.url_name == 'records' %}active{% endif %}">
+                <a href="{% url 'attendance:attendance_records' %}" class="{% if request.resolver_match.url_name == 'attendance_records' %}active{% endif %}">
                     <i class="fas fa-list"></i> Attendance Records
                 </a>
             </li>
@@ -202,15 +235,30 @@
                     <i class="fas fa-chart-bar"></i> Reports
                 </a>
             </li>
+            
+            <!-- Profile and Settings Links -->
+            {% if user.is_authenticated %}
+            <li>
+                <a href="{% url 'attendance:profile' %}" class="{% if request.resolver_match.url_name == 'profile' %}active{% endif %}">
+                    <i class="fas fa-user-cog"></i> Profile
+                </a>
+            </li>
+            {% endif %}
+            
             <li>
                 <a href="#">
                     <i class="fas fa-cog"></i> Settings
                 </a>
             </li>
+            
+            <!-- Logout Button -->
             <li>
-                <a href="{% url 'logout' %}">
-                    <i class="fas fa-sign-out-alt"></i> Logout
-                </a>
+                <form method="post" action="{% url 'logout' %}" class="logout-form">
+                    {% csrf_token %}
+                    <button type="submit" class="logout-btn">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </button>
+                </form>
             </li>
         </ul>
     </aside>
@@ -224,13 +272,29 @@
             </button>
             
             <div class="user-info">
+                {% if user.is_authenticated %}
                 <div class="user-avatar">
                     {{ user.first_name.0|upper }}{{ user.last_name.0|upper }}
                 </div>
                 <div>
-                    <div class="fw-semibold">{{ user.get_full_name }}</div>
-                    <small class="text-muted">{{ user.role|title }}</small>
+                    <div class="fw-semibold">{{ user.get_full_name|default:user.username }}</div>
+                    <small class="text-muted">
+                        {% if user.role %}
+                            {{ user.role|title }}
+                        {% else %}
+                            Employee
+                        {% endif %}
+                    </small>
                 </div>
+                {% else %}
+                <div class="user-avatar">
+                    <i class="fas fa-user"></i>
+                </div>
+                <div>
+                    <div class="fw-semibold">Guest</div>
+                    <small class="text-muted">Not logged in</small>
+                </div>
+                {% endif %}
             </div>
         </div>
 
@@ -267,6 +331,18 @@
                 bsAlert.close();
             });
         }, 5000);
+
+        // Handle logout confirmation
+        document.addEventListener('DOMContentLoaded', function() {
+            const logoutForm = document.querySelector('.logout-form');
+            if (logoutForm) {
+                logoutForm.addEventListener('submit', function(e) {
+                    if (!confirm('Are you sure you want to logout?')) {
+                        e.preventDefault();
+                    }
+                });
+            }
+        });
     </script>
     
     {% block extra_js %}{% endblock %}
