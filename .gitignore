@@ -1,39 +1,6 @@
-# Django Smart Attendance System - .gitignore
-
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-share/python-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-MANIFEST
-*.manifest
-*.spec
-pip-log.txt
-pip-delete-this-directory.txt
 
 # Virtual Environment
 venv/
-env/
-ENV/
-env.bak/
-venv.bak/
 .venv
 
 # Django
@@ -43,129 +10,18 @@ db.sqlite3
 db.sqlite3-journal
 /media
 /staticfiles
-/static_collected
+
 
 # Environment variables
 .env
-.env.local
-.env.production
-.env.*.local
-
-# IDEs
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
-.project
-.pydevproject
-.settings/
-*.sublime-project
-*.sublime-workspace
-
-# OS
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
-desktop.ini
-
-# Testing
-.coverage
-.coverage.*
-htmlcov/
-.tox/
-.pytest_cache/
-.hypothesis/
-nosetests.xml
-coverage.xml
-*.cover
-*.py,cover
-.cache
-
-# Jupyter Notebook
-.ipynb_checkpoints
-
-# Celery
-celerybeat-schedule
-celerybeat.pid
-
-# Backup files
-*.bak
-*.tmp
-*~
-
-# Database
-*.sql
-*.sqlite
-*.sqlite3
-
 # Docker
-docker-compose.override.yml
+docker-compose.yml
 
-# Nginx
-nginx/ssl/*.pem
-nginx/ssl/*.key
-nginx/ssl/*.crt
 
-# Logs
-logs/
-*.log
 
-# Node modules (if using frontend build tools)
-node_modules/
-npm-debug.log
-yarn-error.log
 
-# Build files
-*.pyc
-*.pyo
-*.pyd
 
-# Secrets and keys
-secrets/
-*.pem
-*.key
-*.crt
-*.p12
 
-# QR Codes (sensitive data)
-media/qr_codes/*.png
-media/profiles/*.jpg
-media/profiles/*.png
 
-# Reports
-reports/*.pdf
-reports/*.xlsx
 
-# Temporary files
-tmp/
-temp/
-*.temp
 
-# Redis dump
-dump.rdb
-
-# Documentation builds
-docs/_build/
-site/
-
-# MyPy
-.mypy_cache/
-.dmypy.json
-dmypy.json
-
-# Pyre type checker
-.pyre/
-
-# pytype static type analyzer
-.pytype/
-
-# Cython debug symbols
-cython_debug/
-
-# Local configuration
-config/local.py
