@@ -15,15 +15,13 @@ import json
 
 
 def register(request):
-    """User registration view"""
     if request.method == 'POST':
         form = CustomUserCreationForm(request.POST)
         if form.is_valid():
             try:
-                # Create user
+              
                 user = form.save()
                 
-                # Create employee profile
                 employee = Employee.objects.create(
                     user=user,
                     phone_number=form.cleaned_data.get('phone', ''),
@@ -33,14 +31,13 @@ def register(request):
                     is_active=True
                 )
                 
-                # Log the user in
+              
                 login(request, user)
                 messages.success(request, f"Account created successfully! Welcome {user.get_full_name()}")
                 return redirect('attendance:dashboard')
                 
             except Exception as e:
                 messages.error(request, f"Error creating account: {str(e)}")
-                # Clean up if user was created but employee failed
                 if User.objects.filter(username=form.cleaned_data['username']).exists():
                     User.objects.filter(username=form.cleaned_data['username']).delete()
     else:
@@ -50,12 +47,11 @@ def register(request):
 
 @login_required
 def change_password(request):
-    """Change password view"""
     if request.method == 'POST':
         form = PasswordChangeForm(request.user, request.POST)
         if form.is_valid():
             user = form.save()
-            update_session_auth_hash(request, user)  # Important!
+            update_session_auth_hash(request, user) 
             messages.success(request, 'Your password was successfully updated!')
             return redirect('attendance:profile')
         else:
@@ -67,7 +63,6 @@ def change_password(request):
 
 @login_required
 def dashboard(request):
-    """Main dashboard view"""
     today = timezone.now().date()
     
     total_employees = Employee.objects.filter(is_active=True).count()
@@ -117,7 +112,6 @@ def dashboard(request):
 
 @login_required
 def attendance_records(request):
-    """View all attendance records"""
     date_filter = request.GET.get('date', timezone.now().date())
     status_filter = request.GET.get('status', 'all')
     department_filter = request.GET.get('department', 'all')
@@ -146,7 +140,6 @@ def attendance_records(request):
 
 @login_required
 def employee_list(request):
-    """List all employees"""
     employees = Employee.objects.select_related(
         'user', 'department'
     ).filter(is_active=True)
@@ -168,15 +161,11 @@ def employee_list(request):
 
 @login_required
 def employee_detail(request, pk):
-    """Employee detail view"""
     employee = get_object_or_404(Employee, pk=pk)
-    
-    # Get recent attendance records for display
     attendance_history = AttendanceRecord.objects.filter(
         employee=employee
     ).select_related('employee__user').order_by('-date')[:30]
     
-    # Get statistics using database aggregation
     from django.db.models import Count, Q, Avg, Sum
     
     stats = AttendanceRecord.objects.filter(
@@ -190,13 +179,13 @@ def employee_detail(request, pk):
         total_hours=Sum('working_hours')
     )
     
-    # Calculate values
+ 
     total_days = stats['total_days'] or 0
     present_days = stats['present_days'] or 0
     late_days = stats['late_days'] or 0
     absent_days = stats['absent_days'] or 0
     
-    # Calculate percentages
+   
     present_percentage = (present_days / total_days * 100) if total_days > 0 else 0
     late_percentage = (late_days / total_days * 100) if total_days > 0 else 0
     absent_percentage = (absent_days / total_days * 100) if total_days > 0 else 0
@@ -219,7 +208,6 @@ def employee_detail(request, pk):
 
 @login_required
 def check_in_qr(request):
-    """QR Code check-in"""
     if request.method == 'POST':
         qr_data = request.POST.get('qr_data')
         
@@ -228,7 +216,7 @@ def check_in_qr(request):
             today = timezone.now().date()
             current_time = timezone.now().time()
             
-            #
+    
             existing = AttendanceRecord.objects.filter(
                 employee=employee,
                 date=today
@@ -264,7 +252,6 @@ def check_in_qr(request):
 
 @login_required
 def check_in_fingerprint(request):
-    """Fingerprint check-in"""
     if request.method == 'POST':
         fingerprint_data = request.POST.get('fingerprint_data')
         employee_id = request.POST.get('employee_id')
@@ -319,7 +306,6 @@ def check_in_fingerprint(request):
 
 @login_required
 def check_out(request):
-    """Check-out view"""
     if request.method == 'POST':
         employee_id = request.POST.get('employee_id')
         
@@ -356,7 +342,6 @@ def check_out(request):
 
 @login_required
 def reports(request):
-    """Generate attendance reports"""
     start_date = request.GET.get('start_date', (timezone.now() - timedelta(days=30)).date())
     end_date = request.GET.get('end_date', timezone.now().date())
     
@@ -393,7 +378,6 @@ def reports(request):
 
 @login_required
 def enroll_fingerprint(request, pk):
-    """Enroll fingerprint for employee"""
     employee = get_object_or_404(Employee, pk=pk)
     
     if request.method == 'POST':
@@ -415,12 +399,10 @@ def enroll_fingerprint(request, pk):
 
 @login_required
 def leave_request(request):
-    """Handle leave requests"""
     if request.method == 'POST':
         form = LeaveRequestForm(request.POST)
         if form.is_valid():
             leave_request = form.save(commit=False)
-            # Get the employee profile for the current user
             try:
                 employee = Employee.objects.get(user=request.user)
                 leave_request.employee = employee
@@ -438,7 +420,6 @@ def leave_request(request):
 
 @login_required
 def pending_leave_requests(request):
-    """View pending leave requests (for managers/admins)"""
     if not request.user.is_staff and request.user.role != 'admin':
         messages.error(request, 'You do not have permission to view this page.')
         return redirect('attendance:dashboard')
@@ -454,7 +435,6 @@ def pending_leave_requests(request):
 
 @login_required
 def approve_leave_request(request, pk):
-    """Approve a leave request"""
     if not request.user.is_staff and request.user.role != 'admin':
         messages.error(request, 'You do not have permission to perform this action.')
         return redirect('attendance:dashboard')
@@ -469,7 +449,6 @@ def approve_leave_request(request, pk):
 
 @login_required
 def reject_leave_request(request, pk):
-    """Reject a leave request"""
     if not request.user.is_staff and request.user.role != 'admin':
         messages.error(request, 'You do not have permission to perform this action.')
         return redirect('attendance:dashboard')
@@ -484,7 +463,6 @@ def reject_leave_request(request, pk):
 
 @login_required
 def profile(request):
-    """User profile view"""
     try:
         employee = Employee.objects.get(user=request.user)
     except Employee.DoesNotExist:
@@ -514,7 +492,6 @@ def profile(request):
 
 @login_required
 def change_password(request):
-    """Change password view"""
     if request.method == 'POST':
         form = CustomPasswordChangeForm(request.user, request.POST)
         if form.is_valid():
