@@ -4,7 +4,7 @@ services:
   db:
     image: postgres:15
     environment:
-      POSTGRES_DB: attendance_db
+      POSTGRES_DB: attendance_db     
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: 9320vanity
     ports:
