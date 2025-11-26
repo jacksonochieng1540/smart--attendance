@@ -5,7 +5,6 @@
 
 {% block content %}
 <div class="container-fluid py-4">
-    <!-- Header -->
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2 class="mb-0">Attendance Reports</h2>
         <div class="text-muted">
@@ -13,7 +12,6 @@
         </div>
     </div>
 
-    <!-- Date Range Filter -->
     <div class="card mb-4">
         <div class="card-header bg-white">
             <h5 class="mb-0">Report Filters</h5>
@@ -53,7 +51,7 @@
         </div>
     </div>
 
-    <!-- Summary Statistics -->
+
     <div class="row mb-4">
         <div class="col-md-3">
             <div class="card stat-card bg-primary text-white">
@@ -90,7 +88,6 @@
     </div>
 
     <div class="row">
-        <!-- Department Statistics -->
         <div class="col-lg-6 mb-4">
             <div class="card h-100">
                 <div class="card-header bg-white">
@@ -137,7 +134,6 @@
             </div>
         </div>
 
-        <!-- Status Distribution -->
         <div class="col-lg-6 mb-4">
             <div class="card h-100">
                 <div class="card-header bg-white">
@@ -152,7 +148,6 @@
         </div>
     </div>
 
-    <!-- Detailed Records -->
     <div class="card">
         <div class="card-header bg-white">
             <div class="d-flex justify-content-between align-items-center">
@@ -268,7 +263,6 @@
 }
 </style>
 
-<!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
@@ -287,7 +281,7 @@ document.addEventListener('DOMContentLoaded', function() {
         endDate.value = new Date().toISOString().split('T')[0];
     }
 
-    // Initialize chart
+
     const ctx = document.getElementById('attendanceChart').getContext('2d');
     const attendanceChart = new Chart(ctx, {
         type: 'doughnut',
@@ -332,16 +326,9 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function exportReport() {
-    // In a real implementation, this would generate and download a PDF/Excel report
     alert('Export functionality would be implemented here. This would generate a PDF or Excel report.');
     
-    // Example implementation:
-    // const params = new URLSearchParams({
-    //     start_date: '{{ start_date }}',
-    //     end_date: '{{ end_date }}',
-    //     format: 'pdf'
-    // });
-    // window.open(`/reports/export/?${params}`, '_blank');
+ 
 }
 </script>
 {% endblock %}
