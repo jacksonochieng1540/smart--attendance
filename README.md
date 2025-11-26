@@ -5,7 +5,7 @@ QR Code Check-in/out - Fast and contactless attendance marking
 Fingerprint Biometric - Secure identity verification
 Manual Entry - Admin override capability
 
-📊 Comprehensive Dashboard
+📊 Comprehensive Dashboard for the app
 
 Real-time attendance statistics
 Interactive charts and analytics
