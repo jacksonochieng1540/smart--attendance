@@ -1,25 +1,25 @@
-Features
- #**Dual Authentication System**
+**Features**
+ *Dual Authentication System*
 
-QR Code Check-in/out - Fast and contactless attendance marking
-Fingerprint Biometric - Secure identity verification
-Manual Entry - Admin override capability
+#1QR Code Check-in/out - Fast and contactless attendance marking
+#2Fingerprint Biometric - Secure identity verification
+#3Manual Entry - Admin override capability
 
-#Comprehensive Dashboard for the app
+*Comprehensive Dashboard for the app*
 
-Real-time attendance statistics
-Interactive charts and analytics
-Department-wise reporting
-Employee performance tracking
+#1Real-time attendance statistics
+#2Interactive charts and analytics
+#3Department-wise reporting
+#4Employee performance tracking
 
-Employee Management
+*Employee Management*
 
-Complete employee profiles with photo
-Auto-generated QR codes
+#1Complete employee profiles with photo
+#2Auto-generated QR codes
 Fingerprint enrollment system
 Department and role management
 
-Advanced Reporting
+*Advanced Reporting*
 
 Customizable date range reports
 Export to Excel/CSV/PDF
@@ -27,14 +27,14 @@ Attendance rate calculations
 Late arrival tracking
 Working hours computation
 
-Notifications & Alerts
+*Notifications & Alerts*
 
 Email notifications for attendance
 Late arrival alerts
 Absence notifications
 Leave request updates
 
-Modern UI/UX
+*Modern UI/UX*
 
 Responsive design for all devices
 Dark mode support (coming soon)
