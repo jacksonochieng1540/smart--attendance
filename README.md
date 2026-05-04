@@ -1,81 +1,72 @@
-**Features**
- *Dual Authentication System*
+FEATURES
 
-#1QR Code Check-in/out - Fast and contactless attendance marking
-#2Fingerprint Biometric - Secure identity verification
-#3Manual Entry - Admin override capability
+Dual Authentication System
 
-*Comprehensive Dashboard for the app*
+QR Code Check-in/out: Fast and contactless attendance marking
+Fingerprint Biometric: Secure identity verification
+Manual Entry: Admin override capability
 
-#1Real-time attendance statistics
-#2Interactive charts and analytics
-#3Department-wise reporting
-#4Employee performance tracking
+Comprehensive Dashboard
 
-*Employee Management*
+Real-time attendance statistics
+Interactive charts and analytics
+Department-wise reporting
+Employee performance tracking
 
-#1Complete employee profiles with photo
-#2Auto-generated QR codes
+Employee Management
+
+Complete employee profiles with photos
+Auto-generated QR codes
 Fingerprint enrollment system
 Department and role management
 
-*Advanced Reporting*
+Advanced Reporting
 
 Customizable date range reports
-Export to Excel/CSV/PDF
+Export to Excel, CSV, and PDF
 Attendance rate calculations
 Late arrival tracking
 Working hours computation
 
-*Notifications & Alerts*
+Notifications & Alerts
 
 Email notifications for attendance
 Late arrival alerts
 Absence notifications
 Leave request updates
 
-*Modern UI/UX*
+Modern UI/UX
 
 Responsive design for all devices
 Dark mode support (coming soon)
 Intuitive navigation
-Beautiful data visualizations
+Clean data visualizations
+TECH STACK
 
-
-Tech Stack
 Backend
 
-Django 4.2 - Web framework
-PostgreSQL - Primary database
-Redis - Caching and session storage
-Celery - Background task processing
+Django 4.2
+PostgreSQL
+Redis
+Celery
 
 Frontend
 
-Bootstrap 5 - UI framework
-Chart.js - Data visualization
-Font Awesome - Icons
-HTML5 QR Code - QR scanning
+Bootstrap 5
+Chart.js
+Font Awesome
+HTML5 QR Code
 
 DevOps
 
-Docker - Containerization
-Docker Compose - Multi-container orchestration
-Nginx - Reverse proxy and load balancer
-GitHub Actions - CI/CD pipeline
+Docker
+Docker Compose
+Nginx
+GitHub Actions
 
 Security
 
-HTTPS/SSL - Encrypted communication
-JWT - Token-based authentication
-CORS - Cross-origin resource sharing
-Rate Limiting - API protection
-
-
-Quick Start
-Prerequisites
-
-Python 3.11+
-PostgreSQL 15+
-Redis 7+
-Docker & Docker Compose (optional)
+HTTPS/SSL
+JWT (Token-based authentication)
+CORS
+Rate Limiting
