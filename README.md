@@ -59,9 +59,9 @@ HTML5 QR Code
 
 # DevOps
 
-Docker
-Docker Compose
-Nginx
+Docker,
+Docker Compose,
+Nginx,
 GitHub Actions
 
 # Security
