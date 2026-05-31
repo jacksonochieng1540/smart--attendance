@@ -1,5 +1,4 @@
 
-# Virtual Environment
 venv/
 .venv
 
@@ -11,8 +10,6 @@ db.sqlite3-journal
 /media
 /staticfiles
 
-
-# Environment variables
 .env
 # Docker
 docker-compose.yml
