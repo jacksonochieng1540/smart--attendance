@@ -24,7 +24,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('attendance.urls')),
     
-    # Authentication URLs
+    
     path('accounts/login/', auth_views.LoginView.as_view(
         template_name='registration/login.html',
         redirect_authenticated_user=True
@@ -36,7 +36,7 @@ urlpatterns = [
     
     path('accounts/register/', views.register, name='register'),
     
-    # Password reset URLs
+
     path('accounts/password_reset/', auth_views.PasswordResetView.as_view(
         template_name='registration/password_reset_form.html'
     ), name='password_reset'),
