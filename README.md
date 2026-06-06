@@ -1,6 +1,6 @@
 ## FEATURES
 
-# Dual Authentication System
+# Double/Dual  Authentication System 
 
 QR Code Check-in/out: Fast and contactless attendance marking
 Fingerprint Biometric: Secure identity verification
