@@ -1,4 +1,3 @@
-# attendance/forms.py
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm, PasswordChangeForm
 from django.contrib.auth.models import User
@@ -202,7 +201,6 @@ class EmployeeForm(forms.ModelForm):
         employee = super().save(commit=False)
         
         if not employee.user_id:
-            # Create new user
             user = User.objects.create_user(
                 username=self.cleaned_data['username'],
                 email=self.cleaned_data['email'],
@@ -214,7 +212,6 @@ class EmployeeForm(forms.ModelForm):
             user.save()
             employee.user = user
         else:
-            # Update existing user
             user = employee.user
             user.first_name = self.cleaned_data['first_name']
             user.last_name = self.cleaned_data['last_name']
