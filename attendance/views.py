@@ -497,7 +497,7 @@ def change_password(request):
         if form.is_valid():
             user = form.save()
             from django.contrib.auth import update_session_auth_hash
-            update_session_auth_hash(request, user)  # Important!
+            update_session_auth_hash(request, user)  
             messages.success(request, 'Your password was successfully updated!')
             return redirect('attendance:profile')
         else:
